@@ -1,3 +1,8 @@
+document.getElementById('form').addEventListener('submit', (e) => {
+    e.preventDefault()
+    fetchData()
+})
+
 function fetchData() {
     const repo = document.getElementById('repo').value
     const re = /[-_\w]+\/[-_.\w]+/

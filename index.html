@@ -15,12 +15,14 @@
                     </div>
 
                     <div class="panel-body">
-                        <div class="input-group">
-                            <input id="repo" class="form-control" type="text" placeholder="techgaun/github-dorks">
-                            <span class="input-group-btn">
-                                <button onClick="fetchData()" type="button" class="btn btn-primary">Find</button>
-                            </span>
-                        </div>
+                        <form id="form" class="form-horizontal" role="form">
+                            <div class="input-group">
+                                <input id="repo" class="form-control" type="text" placeholder="techgaun/github-dorks">
+                                <span class="input-group-btn">
+                                    <button onClick="fetchData()" type="button" class="btn btn-primary">Find</button>
+                                </span>
+                            </div>
+                        </form>
 
                         <div id='data-body' class="">
                         </div>
