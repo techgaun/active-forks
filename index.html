@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Find Active Github Forks</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-offset-2 col-8">
+                <div class="panel panel-default">
+                    <div class="panel-heading text-center">
+                        <h3>Find Active Github Forks</h3>
+                    </div>
+
+                    <div class="panel-body">
+                        <div class="input-group">
+                            <input id="repo" class="form-control" type="text" placeholder="techgaun/github-dorks">
+                            <span class="input-group-btn">
+                                <button onClick="fetchData()" type="button" class="btn btn-primary">Find</button>
+                            </span>
+                        </div>
+
+                        <div id='data-body' class="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-offset-2 col-md-8">
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="js/main.js"></script>
+</body>
