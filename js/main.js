@@ -45,7 +45,12 @@ function showData(data) {
         `
         html.push(item)
     }
-    document.getElementById('data-body').innerHTML = `<table class="table table-striped">${thead}<tbody>${html.join()}</tbody></table>`
+    document.getElementById('data-body').innerHTML = `
+        <table class="table table-striped">
+            ${thead}
+            <tbody>${html.join('')}</tbody>
+        </table>
+    `
 }
 
 function timeSince(date_str) {
