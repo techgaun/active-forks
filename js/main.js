@@ -10,7 +10,7 @@ function fetchData() {
     if (re.test(repo)) {
         fetchAndShow(repo)
     } else {
-        showError('Invalid github repo given. Format is <username>/<repo>')
+        showMsg('Invalid GitHub repository! Format is &lt;username&gt;/&lt;repo&gt;', 'danger')
     }
 }
 
@@ -24,17 +24,28 @@ function fetchAndShow(repo) {
         })
 }
 
-function showError(msg) {
-    document.getElementById('data-body').innerHTML = `<div class="alert alert-danger">${msg}</div>`
+function showMsg(msg, type) {
+    let alert_type = 'alert-info'
+    if (type === 'danger') {
+      alert_type = 'alert-danger'
+    }
+    document.getElementById('data-body').innerHTML = `
+        <div class="alert ${alert_type} alert-dismissible fade show" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            ${msg}
+        </div>
+    `
 }
 
 function showData(data) {
     if (!Array.isArray(data)) {
-        showError('Github Repo does not exist')
+        showMsg('GitHub repository does not exist', 'danger')
         return
     }
     if (data.length === 0) {
-        document.getElementById('data-body').innerHTML = `<div class="alert alert-info">No forks exist</div>`
+        showMsg('No forks exist!')
         return
     }
     const thead = '<thead><tr><th>Repository</th><th>Stargazers</th><th>Forks</th><th>Last Update</th></tr></thead>'
