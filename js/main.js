@@ -51,10 +51,12 @@ function showData(data) {
         html.push(item)
     }
     document.getElementById('data-body').innerHTML = `
-        <table class="table table-striped">
-            ${thead}
-            <tbody>${html.join('')}</tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                ${thead}
+                <tbody>${html.join('')}</tbody>
+            </table>
+        </div>
     `
 }
 
