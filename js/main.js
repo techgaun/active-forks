@@ -1,11 +1,21 @@
+window.addEventListener('load', (e) => {
+  const repo = getQueryParams().q;
+  if (repo) {
+    document.getElementById('q').value = repo;
+    fetchData()
+  }
+});
+
 document.getElementById('form').addEventListener('submit', (e) => {
     e.preventDefault()
     fetchData()
 })
 
 function fetchData() {
-    const repo = document.getElementById('repo').value
+    const repo = document.getElementById('q').value
     const re = /[-_\w]+\/[-_.\w]+/
+
+    window.history.pushState('', '', `?q=${repo}`);
 
     if (re.test(repo)) {
         fetchAndShow(repo)
@@ -70,6 +80,21 @@ function showData(data) {
         </div>
     `
 }
+
+function getQueryParams() {
+  let query = location.search;
+  if (!query) {
+    return { };
+  }
+
+  return (/^[?#]/.test(query) ? query.slice(1) : query)
+    .split('&')
+    .reduce((params, param) => {
+      let [ key, value ] = param.split('=');
+      params[key] = value ? decodeURIComponent(value.replace(/\+/g, ' ')) : '';
+      return params;
+    }, { });
+};
 
 function timeSince(date_str) {
     const date = new Date(date_str)
