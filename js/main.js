@@ -25,9 +25,17 @@ function fetchData() {
 }
 
 function fetchAndShow(repo) {
+    document.getElementById('find').disabled = true;
+    document.getElementById('spinner').removeAttribute('hidden');
+
     fetch(`https://api.github.com/repos/${repo}/forks?sort=stargazers`)
         .then((response) => response.json())
-        .then((data) => showData(data));
+        .then((data) => {
+          showData(data);
+
+          document.getElementById('find').disabled = false;
+          document.getElementById('spinner').setAttribute('hidden', 'hidden');
+        });
 }
 
 function showMsg(msg, type) {
@@ -36,6 +44,8 @@ function showMsg(msg, type) {
     if (type === 'danger') {
         alert_type = 'alert-danger';
     }
+
+    document.getElementById('footer').innerHTML = '';
 
     document.getElementById('data-body').innerHTML = `
         <div class="alert ${alert_type} alert-dismissible fade show" role="alert">
@@ -83,8 +93,8 @@ function showData(data) {
     }
 
     document.getElementById('data-body').innerHTML = `
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered table-hover rounded">
+        <div class="table-responsive rounded">
+            <table class="table table-striped table-bordered table-hover">
                 ${thead}
                 <tbody>${html.join('')}</tbody>
             </table>
