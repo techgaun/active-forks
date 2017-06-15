@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
     <title>Active GitHub Forks</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
@@ -41,7 +42,7 @@
                                   <input id="q" name="q" class="form-control" type="text" placeholder="techgaun/github-dorks">
                                   <span class="input-group-btn">
                                       <button id="find" onClick="fetchData()" type="button" class="btn btn-primary">
-                                          <i id="spinner" class="fa fa-spinner fa-pulse fa-fw"></i> Find
+                                          <i id="spinner" class="fa fa-spinner fa-pulse fa-fw" hidden></i> Find
                                       </button>
                                   </span>
                               </div>
