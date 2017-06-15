@@ -1,44 +1,42 @@
-window.addEventListener('load', (e) => {
-  const repo = getQueryParams().q;
-  if (repo) {
-    document.getElementById('q').value = repo;
-    fetchData()
-  }
+window.addEventListener('load', () => {
+    const repo = getQueryParams().q;
+    if (repo) {
+        document.getElementById('q').value = repo;
+        fetchData();
+    }
 });
 
 document.getElementById('form').addEventListener('submit', (e) => {
-    e.preventDefault()
-    fetchData()
-})
+    e.preventDefault();
+    fetchData();
+});
 
 function fetchData() {
-    const repo = document.getElementById('q').value
-    const re = /[-_\w]+\/[-_.\w]+/
+    const repo = document.getElementById('q').value;
+    const re = /[-_\w]+\/[-_.\w]+/;
 
     window.history.pushState('', '', `?q=${repo}`);
 
     if (re.test(repo)) {
-        fetchAndShow(repo)
+        fetchAndShow(repo);
     } else {
-        showMsg('Invalid GitHub repository! Format is &lt;username&gt;/&lt;repo&gt;', 'danger')
+        showMsg('Invalid GitHub repository! Format is &lt;username&gt;/&lt;repo&gt;', 'danger');
     }
 }
 
 function fetchAndShow(repo) {
     fetch(`https://api.github.com/repos/${repo}/forks?sort=stargazers`)
-        .then(function(response) {
-            response.json()
-                .then(function(data) {
-                    showData(data)
-                })
-        })
+        .then((response) => response.json())
+        .then((data) => showData(data));
 }
 
 function showMsg(msg, type) {
-    let alert_type = 'alert-info'
+    let alert_type = 'alert-info';
+
     if (type === 'danger') {
-      alert_type = 'alert-danger'
+        alert_type = 'alert-danger';
     }
+
     document.getElementById('data-body').innerHTML = `
         <div class="alert ${alert_type} alert-dismissible fade show" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -46,20 +44,32 @@ function showMsg(msg, type) {
             </button>
             ${msg}
         </div>
-    `
+    `;
 }
 
 function showData(data) {
     if (!Array.isArray(data)) {
-        showMsg('GitHub repository does not exist', 'danger')
-        return
+        showMsg('GitHub repository does not exist', 'danger');
+        return;
     }
+
     if (data.length === 0) {
-        showMsg('No forks exist!')
-        return
+        showMsg('No forks exist!');
+        return;
     }
-    const thead = '<thead><tr><th>Repository</th><th>Stargazers</th><th>Forks</th><th>Last Update</th></tr></thead>'
-    const html = []
+
+    const html = [];
+    const thead = `
+        <thead>
+            <tr class="table-active">
+                <th><i class="fa fa-github" aria-hidden="true"></i> Repository</th>
+                <th><i class="fa fa-star" aria-hidden="true"></i> Stargazers</th>
+                <th><i class="fa fa-code-fork" aria-hidden="true"></i> Forks</th>
+                <th><i class="fa fa-clock-o" aria-hidden="true"></i> Last Update</th>
+            </tr>
+        </thead>
+    `;
+
     for (const fork of data) {
         const item = `
             <tr>
@@ -68,58 +78,66 @@ function showData(data) {
                 <td>${fork.forks_count}</td>
                 <td>${timeSince(fork.updated_at)} ago</td>
             </tr>
-        `
-        html.push(item)
+        `;
+        html.push(item);
     }
+
     document.getElementById('data-body').innerHTML = `
         <div class="table-responsive">
-            <table class="table table-striped table-bordered">
+            <table class="table table-striped table-bordered table-hover rounded">
                 ${thead}
                 <tbody>${html.join('')}</tbody>
             </table>
         </div>
-    `
+    `;
+
+    document.getElementById('footer').innerHTML = `${data.length} ${data.length == 1 ? 'result' : 'results'}`;
 }
 
 function getQueryParams() {
-  let query = location.search;
-  if (!query) {
-    return { };
-  }
+    let query = location.search;
+    if (!query) {
+        return { };
+    }
 
-  return (/^[?#]/.test(query) ? query.slice(1) : query)
+    return (/^[?#]/.test(query) ? query.slice(1) : query)
     .split('&')
     .reduce((params, param) => {
-      let [ key, value ] = param.split('=');
-      params[key] = value ? decodeURIComponent(value.replace(/\+/g, ' ')) : '';
-      return params;
+        let [ key, value ] = param.split('=');
+        params[key] = value ? decodeURIComponent(value.replace(/\+/g, ' ')) : '';
+        return params;
     }, { });
-};
+}
 
 function timeSince(date_str) {
-    const date = new Date(date_str)
+    const date = new Date(date_str);
     const seconds = Math.floor((new Date() - date) / 1000);
 
     let interval = Math.floor(seconds / 31536000);
 
     if (interval > 1) {
-        return interval + " years";
+        return interval + ' years';
     }
+
     interval = Math.floor(seconds / 2592000);
     if (interval > 1) {
-        return interval + " months";
+        return interval + ' months';
     }
+
     interval = Math.floor(seconds / 86400);
     if (interval > 1) {
-        return interval + " days";
+        return interval + ' days';
     }
+
     interval = Math.floor(seconds / 3600);
     if (interval > 1) {
-        return interval + " hours";
+        return interval + ' hours';
     }
+
     interval = Math.floor(seconds / 60);
     if (interval > 1) {
-        return interval + " minutes";
+        return interval + ' minutes';
     }
-    return Math.floor(seconds) + " seconds";
+
+    return Math.floor(seconds) + ' seconds';
 }

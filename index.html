@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Active Github Forks</title>
+    <title>Active GitHub Forks</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
     <style>
         body {
             padding-top: 2rem;
             padding-bottom: 2rem;
+        }
+        .black {
+            color: #292b2c;
         }
     </style>
 </head>
@@ -21,7 +26,12 @@
             <div class="col-sm-12 col-lg-12">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h3>Active Github Forks</h3>
+                        <h3>
+                            <a href="https://github.com/techgaun/active-forks" class="black">
+                                <i class="fa fa-github-alt pull-left" aria-hidden="true"></i>
+                            </a>
+                            Active GitHub Forks
+                        </h3>
                     </div>
 
                     <div class="card-block">
@@ -30,7 +40,13 @@
                               <div class="input-group">
                                   <input id="q" name="q" class="form-control" type="text" placeholder="techgaun/github-dorks">
                                   <span class="input-group-btn">
-                                      <button onClick="fetchData()" type="button" class="btn btn-primary">Find</button>
+                                      <button id="find" onClick="fetchData()" type="button" class="btn btn-primary">
+                                          <div id="spinner" hidden>
+                                              <i class="fa fa-spinner fa-pulse fa-fw"></i>
+                                              <span class="sr-only">Loading...</span>
+                                          </div>
+                                          Find
+                                      </button>
                                   </span>
                               </div>
                           </form>
@@ -38,6 +54,7 @@
 
                         <div id="data-body"></div>
                     </div>
+                    <div id="footer" class="card-footer text-muted"></div>
                 </div>
             </div>
         </div>
