@@ -86,7 +86,7 @@ function showData(data) {
                 <td><a href="${fork.html_url}">${fork.full_name}</a></td>
                 <td>${fork.stargazers_count}</td>
                 <td>${fork.forks_count}</td>
-                <td>${timeSince(fork.updated_at)} ago</td>
+                <td>${timeSince(fork.pushed_at)} ago</td>
             </tr>
         `;
         html.push(item);
