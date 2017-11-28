@@ -75,7 +75,7 @@ function showData(data) {
                 <th><i class="fa fa-github" aria-hidden="true"></i> Repository</th>
                 <th><i class="fa fa-star" aria-hidden="true"></i> Stargazers</th>
                 <th><i class="fa fa-code-fork" aria-hidden="true"></i> Forks</th>
-                <th><i class="fa fa-clock-o" aria-hidden="true"></i> Last Update</th>
+                <th><i class="fa fa-clock-o" aria-hidden="true"></i> Last Push</th>
             </tr>
         </thead>
     `;
@@ -86,7 +86,7 @@ function showData(data) {
                 <td><a href="${fork.html_url}">${fork.full_name}</a></td>
                 <td>${fork.stargazers_count}</td>
                 <td>${fork.forks_count}</td>
-                <td>${timeSince(fork.updated_at)} ago</td>
+                <td>${timeSince(fork.pushed_at)} ago</td>
             </tr>
         `;
         html.push(item);
