@@ -45,11 +45,16 @@ function initDT() {
     [ 'Last Push', 'pushed_at' ],
   ]
 
+  // Sort by stars:
+  const sortColName = 'Stars'
+  const sortColumnIdx = window.columnNamesMap.map( pair => pair[0] ).indexOf( sortColName )
+
   // Use first index for readable column name
   window.forkTable = $( '#forkTable' ).DataTable( {
     columns: window.columnNamesMap.map( colNM => {
       return {'title': colNM[0]}
     } ),
+    'order': [[sortColumnIdx, 'desc']],
   } )
 }
 
