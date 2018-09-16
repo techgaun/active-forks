@@ -11,16 +11,15 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
     <style>
-        body {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
-        .black {
-            color: #292b2c;
-        }
+    body {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    }
+    .black {
+    color: #292b2c;
+    }
     </style>
 </head>
-
 <body>
     <div class="container">
         <div class="row">
@@ -28,27 +27,25 @@
                 <div class="card">
                     <div class="card-header text-center">
                         <h3>
-                            <a href="https://github.com/techgaun/active-forks" class="black">
-                                <i class="fa fa-github-alt pull-left" aria-hidden="true"></i>
-                            </a>
-                            Active GitHub Forks
+                        <a href="https://github.com/techgaun/active-forks" class="black">
+                            <i class="fa fa-github-alt pull-left" aria-hidden="true"></i>
+                        </a>
+                        Active GitHub Forks
                         </h3>
                     </div>
-
                     <div class="card-block">
                         <div class="form-group">
-                          <form id="form" role="form">
-                              <div class="input-group">
-                                  <input id="q" name="q" class="form-control" type="text" placeholder="techgaun/github-dorks">
-                                  <span class="input-group-btn">
-                                      <button id="find" onClick="fetchData()" type="button" class="btn btn-primary">
-                                          <i id="spinner" class="fa fa-spinner fa-pulse fa-fw" hidden></i> Find
-                                      </button>
-                                  </span>
-                              </div>
-                          </form>
+                            <form id="form" role="form">
+                                <div class="input-group">
+                                    <input id="q" name="q" class="form-control" type="text" placeholder="techgaun/github-dorks">
+                                    <span class="input-group-btn">
+                                        <button id="find" onClick="fetchData()" type="button" class="btn btn-primary">
+                                        <i id="spinner" class="fa fa-spinner fa-pulse fa-fw" hidden></i> Find
+                                        </button>
+                                    </span>
+                                </div>
+                            </form>
                         </div>
-
                         <div id="data-body"></div>
                     </div>
                     <div id="footer" class="card-footer text-muted"></div>

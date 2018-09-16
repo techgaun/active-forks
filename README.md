@@ -1,7 +1,6 @@
-# active-forks
+# Active-Forks
 
-> Find the active github forks of a project
+> Find the most active Github forks of a project sorted by stars, watchers, last commit, etc.
 
-This project allows you to find the most active forks of a repository.
-
-[Find Active Fork](https://techgaun.github.io/active-forks/index.html)
+[(Master) Find Active Fork](https://techgaun.github.io/active-forks/index.html)
+[(This Branch) Find Active Fork](TBD)
