@@ -1,4 +1,6 @@
 window.addEventListener('load', () => {
+    initDT()  // Initialize the DatatTable and window.columnNames variables
+
     const repo = getQueryParams().q;
     if (repo) {
         document.getElementById('q').value = repo;
@@ -24,18 +26,66 @@ function fetchData() {
     }
 }
 
-function fetchAndShow(repo) {
-    document.getElementById('find').disabled = true;
-    document.getElementById('spinner').removeAttribute('hidden');
+function updateDT( data ) {
+    // Remove any alerts, if any:
+    if ( $( '.alert' ) )
+        $( '.alert' ).remove()
 
-    fetch(`https://api.github.com/repos/${repo}/forks?sort=stargazers`)
-        .then((response) => response.json())
-        .then((data) => {
-          showData(data);
+    // Format dataset and redraw DataTable. Use second index for key name
+    const forks = []
+    for ( let fork of data ) {
+      fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`
+      fork.ownerName = fork.owner.login
+      forks.push( fork )
+    }
+    const dataSet = forks.map( fork => window.columnNamesMap.map( colNM => fork[colNM[1]] ) )
+    window.forkTable.clear().rows.add( dataSet ).draw()
+}
 
-          document.getElementById('find').disabled = false;
-          document.getElementById('spinner').setAttribute('hidden', 'hidden');
-        });
+function initDT() {
+    // Create ordered Object with column name and mapped display name
+    window.columnNamesMap = [
+        // [ 'Repository', 'full_name' ],
+        ['Link', 'repoLink'],  // custom key
+        ['Owner', 'ownerName'],  // custom key
+        ['Name', 'name'],
+        ['Branch', 'default_branch'],
+        ['Stars', 'stargazers_count'],
+        ['Forks', 'forks'],
+        ['Size', 'size'],
+        ['Last Push', 'pushed_at'],
+    ]
+
+    // Sort by stars:
+    const sortColName = 'Stars'
+    const sortColumnIdx = window.columnNamesMap.map( pair => pair[0] ).indexOf( sortColName )
+
+    // Use first index for readable column name
+    window.forkTable = $( '#forkTable' ).DataTable( {
+        columns: window.columnNamesMap.map( colNM => {
+            return {'title': colNM[0]}
+        } ),
+        'order': [[sortColumnIdx, 'desc']],
+    } )
+}
+
+function fetchAndShow( repo ) {
+
+  fetch( `https://api.github.com/repos/${repo}/forks?sort=stargazers` )
+    .then( ( response ) => {
+      if ( !response.ok )
+        throw Error( response.statusText )
+      return response.json()
+    } )
+    .then( ( data ) => {
+        console.log( data )
+        updateDT( data )
+    } )
+    .catch( ( error ) => {
+        const msg = error.toString().indexOf( 'Forbidden' ) >= 0 ? 'Error: API Rate Limit Exceeded' : error
+        showMsg( `${msg}. Additional info in console`, 'danger' )
+        console.error( error )
+    } )
 }
 
 function showMsg(msg, type) {
