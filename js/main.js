@@ -73,14 +73,18 @@ function fetchAndShow( repo ) {
 
   fetch( `https://api.github.com/repos/${repo}/forks?sort=stargazers` )
     .then( ( response ) => {
-      if ( !response.ok ) {
+      if ( !response.ok )
         throw Error( response.statusText )
-      }
       return response.json()
     } )
     .then( ( data ) => {
         console.log( data )
         updateDT( data )
+    } )
+    .catch( ( error ) => {
+        const msg = error.toString().indexOf( 'Forbidden' ) >= 0 ? 'Error: API Rate Limit Exceeded' : error
+        showMsg( `${msg}. Additional info in console`, 'danger' )
+        console.error( error )
     } )
 }
 
