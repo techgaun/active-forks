@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
     <title>Active GitHub Forks</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
@@ -13,15 +13,16 @@
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/js/jquery.dataTables.min.js"></script>
     <style>
-    body {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    }
-    .black {
-    color: #292b2c;
-    }
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        .black {
+            color: #292b2c;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="row">
@@ -29,32 +30,34 @@
                 <div class="card">
                     <div class="card-header text-center">
                         <h3>
-                        <a href="https://github.com/techgaun/active-forks" class="black">
-                            <i class="fa fa-github-alt pull-left" aria-hidden="true"></i>
-                        </a>
-                        Active GitHub Forks
+                            <a href="https://github.com/techgaun/active-forks" class="black">
+                                <i class="fa fa-github-alt pull-left" aria-hidden="true"></i>
+                            </a>
+                            Active GitHub Forks
                         </h3>
                     </div>
+
                     <div class="card-block">
                         <div class="form-group">
-                            <form id="form" role="form">
-                                <div class="input-group">
-                                    <input id="q" name="q" class="form-control" type="text" placeholder="techgaun/github-dorks">
-                                    <span class="input-group-btn">
-                                        <button id="find" onClick="fetchData()" type="button" class="btn btn-primary">
-                                        <i id="spinner" class="fa fa-spinner fa-pulse fa-fw" hidden></i> Find
-                                        </button>
-                                    </span>
-                                </div>
-                            </form>
+                          <form id="form" role="form">
+                              <div class="input-group">
+                                  <input id="q" name="q" class="form-control" type="text" placeholder="techgaun/github-dorks">
+                                  <span class="input-group-btn">
+                                      <button id="find" onClick="fetchData()" type="button" class="btn btn-primary">
+                                          <i id="spinner" class="fa fa-spinner fa-pulse fa-fw" hidden></i> Find
+                                      </button>
+                                  </span>
+                              </div>
+                          </form>
                         </div>
-                    <div id="data-body"></div>
-                    <table id="forkTable" class="display" width="100%"></table>
+
+                        <div id="data-body"></div>
+                        <table id="forkTable" class="display" width="100%"></table>
+                    </div>
+                    <div id="footer" class="card-footer text-muted"></div>
                 </div>
-                <div id="footer" class="card-footer text-muted"></div>
             </div>
         </div>
     </div>
-</div>
-<script type="text/javascript" src="js/main.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
 </body>
