@@ -24,6 +24,7 @@ function updateDT( data ) {
   // Format dataset and redraw DataTable. Use second index for key name
   const forks = []
   for ( let fork of data ) {
+    fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`
     fork.ownerName = fork.owner.login
     forks.push( fork )
   }
@@ -35,6 +36,7 @@ function initDT() {
   // Create ordered Object with column name and mapped display name
   window.columnNamesMap = [
     // [ 'Repository', 'full_name' ],
+    ['Link', 'repoLink'],  // custom key
     [ 'Owner', 'ownerName' ],  // custom key
     [ 'Name', 'name' ],
     [ 'Branch', 'default_branch' ],
