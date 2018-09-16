@@ -10,7 +10,8 @@
   "globals": {
     "_": true,
     "$": true,
-    "Promise": true
+    "Promise": true,
+    "Map": true
   },
   "rules": {
     "camelcase": 2,
