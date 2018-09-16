@@ -37,14 +37,14 @@ function initDT() {
   window.columnNamesMap = [
     // [ 'Repository', 'full_name' ],
     ['Link', 'repoLink'],  // custom key
-    [ 'Owner', 'ownerName' ],  // custom key
-    [ 'Name', 'name' ],
-    [ 'Branch', 'default_branch' ],
-    [ 'Stars', 'stargazers_count' ],
-    [ 'Watchers', 'watchers' ],
-    [ 'Forks', 'forks' ],
-    [ 'Size', 'size' ],
-    [ 'Last Push', 'pushed_at' ],
+    ['Owner', 'ownerName'],  // custom key
+    ['Name', 'name'],
+    ['Branch', 'default_branch'],
+    ['Stars', 'stargazers_count'],
+    ['Watchers', 'watchers'],
+    ['Forks', 'forks'],
+    ['Size', 'size'],
+    ['Last Push', 'pushed_at'],
   ]
 
   // Sort by stars:
