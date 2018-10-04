@@ -36,6 +36,7 @@ function updateDT( data ) {
     for ( let fork of data ) {
       fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`
       fork.ownerName = fork.owner.login
+      fork.pushed_at = moment(fork.pushed_at).fromNow()
       forks.push( fork )
     }
     const dataSet = forks.map( fork => window.columnNamesMap.map( colNM => fork[colNM[1]] ) )
