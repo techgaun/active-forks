@@ -1,7 +1,8 @@
 window.addEventListener('load', () => {
     initDT()  // Initialize the DatatTable and window.columnNames variables
 
-    const repo = getQueryParams().q;
+    const repo = getRepoFromUrl();
+
     if (repo) {
         document.getElementById('q').value = repo;
         fetchData();
@@ -17,7 +18,11 @@ function fetchData() {
     const repo = document.getElementById('q').value;
     const re = /[-_\w]+\/[-_.\w]+/;
 
-    window.history.pushState('', '', `?q=${repo}`);
+    const urlRepo = getRepoFromUrl();
+
+    if (!urlRepo || urlRepo !== repo) {
+        window.history.pushState('', '', `/#${repo}`);
+    }
 
     if (re.test(repo)) {
         fetchAndShow(repo);
@@ -154,19 +159,10 @@ function showData(data) {
     document.getElementById('footer').innerHTML = `${data.length} ${data.length == 1 ? 'result' : 'results'}`;
 }
 
-function getQueryParams() {
-    let query = location.search;
-    if (!query) {
-        return { };
-    }
+function getRepoFromUrl() {
+    const urlRepo = location.hash && location.hash.slice(1);
 
-    return (/^[?#]/.test(query) ? query.slice(1) : query)
-    .split('&')
-    .reduce((params, param) => {
-        let [ key, value ] = param.split('=');
-        params[key] = value ? decodeURIComponent(value.replace(/\+/g, ' ')) : '';
-        return params;
-    }, { });
+    return urlRepo && decodeURIComponent(urlRepo);
 }
 
 function timeSince(date_str) {
