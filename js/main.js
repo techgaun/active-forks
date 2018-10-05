@@ -52,8 +52,9 @@ function initDT() {
         ['Branch', 'default_branch'],
         ['Stars', 'stargazers_count'],
         ['Forks', 'forks'],
+        ['Open Issues', 'open_issues_count'],
         ['Size', 'size'],
-        ['Last Push', 'pushed_at'],
+        ['Last Push', 'pushed_at']
     ]
 
     // Sort by stars:
