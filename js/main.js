@@ -21,7 +21,7 @@ function fetchData() {
     const urlRepo = getRepoFromUrl();
 
     if (!urlRepo || urlRepo !== repo) {
-        window.history.pushState('', '', `/#${repo}`);
+        window.history.pushState('', '', `#${repo}`);
     }
 
     if (re.test(repo)) {
