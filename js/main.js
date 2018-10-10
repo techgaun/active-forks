@@ -78,7 +78,7 @@ function initDT() {
 
 function fetchAndShow( repo ) {
 
-  fetch( `https://api.github.com/repos/${repo}/forks?sort=stargazers` )
+  fetch( `https://api.github.com/repos/${repo}/forks?sort=stargazers&per_page=100` )
     .then( ( response ) => {
       if ( !response.ok )
         throw Error( response.statusText )
