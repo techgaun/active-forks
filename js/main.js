@@ -16,7 +16,6 @@ document.getElementById('form').addEventListener('submit', (e) => {
 
 function fetchData() {
     const repo = document.getElementById('q').value;
-    console.log("repo link " + repo);
     const re = /[-_\w]+\/[-_.\w]+/;
 
     const urlRepo = getRepoFromUrl();
