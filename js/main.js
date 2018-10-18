@@ -16,6 +16,7 @@ document.getElementById('form').addEventListener('submit', (e) => {
 
 function fetchData() {
     const repo = document.getElementById('q').value;
+    console.log("repo link " + repo);
     const re = /[-_\w]+\/[-_.\w]+/;
 
     const urlRepo = getRepoFromUrl();
@@ -77,6 +78,10 @@ function initDT() {
 }
 
 function fetchAndShow( repo ) {
+    
+    repo = repo.replace('https://github.com/', '');
+    repo = repo.replace('http://github.com/', '');
+    repo = repo.replace('.git', '');
 
   fetch( `https://api.github.com/repos/${repo}/forks?sort=stargazers` )
     .then( ( response ) => {
