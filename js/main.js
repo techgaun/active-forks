@@ -77,6 +77,10 @@ function initDT() {
 }
 
 function fetchAndShow( repo ) {
+    
+    repo = repo.replace('https://github.com/', '');
+    repo = repo.replace('http://github.com/', '');
+    repo = repo.replace('.git', '');
 
   fetch( `https://api.github.com/repos/${repo}/forks?sort=stargazers` )
     .then( ( response ) => {
