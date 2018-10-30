@@ -82,7 +82,7 @@ function fetchAndShow( repo ) {
     repo = repo.replace('http://github.com/', '');
     repo = repo.replace('.git', '');
 
-  fetch( `https://api.github.com/repos/${repo}/forks?sort=stargazers` )
+  fetch( `https://api.github.com/repos/${repo}/forks?sort=stargazers&per_page=100` )
     .then( ( response ) => {
       if ( !response.ok )
         throw Error( response.statusText )
