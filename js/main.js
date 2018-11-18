@@ -41,7 +41,6 @@ function updateDT( data ) {
     for ( let fork of data ) {
       fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`
       fork.ownerName = fork.owner.login
-      fork.pushed_at = moment(fork.pushed_at).fromNow()
       forks.push( fork )
     }
     const dataSet = forks.map( fork => window.columnNamesMap.map( colNM => fork[colNM[1]] ) )
@@ -68,10 +67,19 @@ function initDT() {
     const sortColumnIdx = window.columnNamesMap.map( pair => pair[0] ).indexOf( sortColName )
 
     // Use first index for readable column name
+    // we use moment's fromNow() if we are rendering for `pushed_at`; better solution welcome
     window.forkTable = $( '#forkTable' ).DataTable( {
         columns: window.columnNamesMap.map( colNM => {
-            return {'title': colNM[0]}
-        } ),
+          return {
+            title: colNM[0],
+            render: colNM[1] === 'pushed_at' ? (data, type, _row) => {
+              if (type === 'display') {
+                return moment(data).fromNow()
+              }
+              return data
+            } : null
+          }
+        }),
         'order': [[sortColumnIdx, 'desc']],
     } )
 }
