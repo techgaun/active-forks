@@ -118,88 +118,8 @@ function showMsg(msg, type) {
     `;
 }
 
-function showData(data) {
-    if (!Array.isArray(data)) {
-        showMsg('GitHub repository does not exist', 'danger');
-        return;
-    }
-
-    if (data.length === 0) {
-        showMsg('No forks exist!');
-        return;
-    }
-
-    const html = [];
-    const thead = `
-        <thead>
-            <tr class="table-active">
-                <th><i class="fa fa-github" aria-hidden="true"></i> Repository</th>
-                <th><i class="fa fa-star" aria-hidden="true"></i> Stargazers</th>
-                <th><i class="fa fa-code-fork" aria-hidden="true"></i> Forks</th>
-                <th><i class="fa fa-clock-o" aria-hidden="true"></i> Last Push</th>
-            </tr>
-        </thead>
-    `;
-
-    for (const fork of data) {
-        const item = `
-            <tr>
-                <td><a href="${fork.html_url}">${fork.full_name}</a></td>
-                <td>${fork.stargazers_count}</td>
-                <td>${fork.forks_count}</td>
-                <td>${timeSince(fork.pushed_at)} ago</td>
-            </tr>
-        `;
-        html.push(item);
-    }
-
-    document.getElementById('data-body').innerHTML = `
-        <div class="table-responsive rounded">
-            <table class="table table-striped table-bordered table-hover">
-                ${thead}
-                <tbody>${html.join('')}</tbody>
-            </table>
-        </div>
-    `;
-
-    document.getElementById('footer').innerHTML = `${data.length} ${data.length == 1 ? 'result' : 'results'}`;
-}
-
 function getRepoFromUrl() {
     const urlRepo = location.hash && location.hash.slice(1);
 
     return urlRepo && decodeURIComponent(urlRepo);
-}
-
-function timeSince(date_str) {
-    const date = new Date(date_str);
-    const seconds = Math.floor((new Date() - date) / 1000);
-
-    let interval = Math.floor(seconds / 31536000);
-
-    if (interval > 1) {
-        return interval + ' years';
-    }
-
-    interval = Math.floor(seconds / 2592000);
-    if (interval > 1) {
-        return interval + ' months';
-    }
-
-    interval = Math.floor(seconds / 86400);
-    if (interval > 1) {
-        return interval + ' days';
-    }
-
-    interval = Math.floor(seconds / 3600);
-    if (interval > 1) {
-        return interval + ' hours';
-    }
-
-    interval = Math.floor(seconds / 60);
-    if (interval > 1) {
-        return interval + ' minutes';
-    }
-
-    return Math.floor(seconds) + ' seconds';
 }
