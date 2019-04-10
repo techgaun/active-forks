@@ -14,6 +14,64 @@ document.getElementById('form').addEventListener('submit', e => {
   fetchData();
 });
 
+function getGraphQLSchema(owner, repo_name) {
+  const query = `
+  {
+    repository(owner: "${owner}", name: "${repo_name}") {
+      id
+      name
+      defaultBranchRef {
+        id
+        name
+      }
+      diskUsage
+      owner {
+        login
+      }
+      forkCount
+      issues(states: [OPEN]) {
+        totalCount
+      }
+      watchers {
+        totalCount
+      }
+      stargazers {
+        totalCount
+      }
+      pushedAt
+      forks(first: 100, orderBy: {field: STARGAZERS, direction: DESC}) {
+        edges {
+          node {
+            id
+            name
+            diskUsage
+            defaultBranchRef {
+              id
+              name
+            }
+            owner {
+              login
+            }
+            forkCount
+            issues(states: [OPEN]) {
+              totalCount
+            }    
+            watchers {
+              totalCount
+            }
+            stargazers {
+              totalCount
+            }
+            pushedAt
+          }
+        }
+      }
+    }
+  }
+  `;
+  return JSON.stringify({ query });
+}
+
 function fetchData() {
   const repo = document.getElementById('q').value;
   const re = /[-_\w]+\/[-_.\w]+/;
@@ -97,13 +155,17 @@ function initDT() {
 }
 
 function fetchAndShow(repo) {
-  repo = repo.replace('https://github.com/', '');
-  repo = repo.replace('http://github.com/', '');
-  repo = repo.replace('.git', '');
+  const [owner, repo_name] = repo
+    .replace('https://github.com/', '')
+    .replace('http://github.com/', '')
+    .replace('.git', '')
+    .split('/');
 
-  fetch(
-    `https://api.github.com/repos/${repo}/forks?sort=stargazers&per_page=100`
-  )
+  fetch(`https://api.github.com/graphql`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: schemaToQuery,
+  })
     .then(response => {
       if (!response.ok) throw Error(response.statusText);
       return response.json();
