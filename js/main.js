@@ -164,7 +164,7 @@ function fetchAndShow(repo) {
   fetch(`https://api.github.com/graphql`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: schemaToQuery,
+    body: getGraphQLSchema(owner, repo_name),
   })
     .then(response => {
       if (!response.ok) throw Error(response.statusText);
