@@ -100,6 +100,7 @@ function fetchAndShow(repo) {
   repo = repo.replace('https://github.com/', '');
   repo = repo.replace('http://github.com/', '');
   repo = repo.replace('.git', '');
+  repo = repo.replace(/^github.com\//, '');
 
   fetch(
     `https://api.github.com/repos/${repo}/forks?sort=stargazers&per_page=100`
