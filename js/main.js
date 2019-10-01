@@ -34,24 +34,38 @@ function fetchData() {
   }
 }
 
-function updateDT(data) {
+function updateDT(data, repo) {
   // Remove any alerts, if any:
   if ($('.alert')) $('.alert').remove();
 
   // Format dataset and redraw DataTable. Use second index for key name
   const forks = [];
-  for (let fork of data) {
-    fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`;
-    fork.ownerName = fork.owner.login;
-    forks.push(fork);
-  }
-  const dataSet = forks.map(fork =>
-    window.columnNamesMap.map(colNM => fork[colNM[1]])
-  );
-  window.forkTable
-    .clear()
-    .rows.add(dataSet)
-    .draw();
+
+  Promise.all(data.map(fork =>
+    fetch(`https://api.github.com/repos/${repo}/compare/master...${fork.owner.login}:master`)
+      .then(resp => resp.json())
+      .then(data => {
+        fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`;
+        fork.ownerName = fork.owner.login;
+        fork.status = data.status;
+        fork.ahead_by = data.ahead_by;
+        fork.behind_by = data.behind_by;
+        fork.total_commits = data.total_commits;
+        forks.push(fork);
+      })
+  ))
+    .then(_ => {
+      const dataSet = forks.map(fork =>
+        window.columnNamesMap.map(colNM => fork[colNM[1]])
+      );
+      window.forkTable
+        .clear()
+        .rows.add(dataSet)
+        .draw();
+    })
+    .catch(error => {
+      handleError(error);
+    });
 }
 
 function initDT() {
@@ -67,6 +81,11 @@ function initDT() {
     ['Open Issues', 'open_issues_count'],
     ['Size', 'size'],
     ['Last Push', 'pushed_at'],
+    ['Status', 'status'],
+    ['Status', 'status'],
+    ['Ahead by', 'ahead_by'],
+    ['Behind by', 'behind_by'],
+    ['Commits', 'total_commits'],
   ];
 
   // Sort by stars:
@@ -84,11 +103,11 @@ function initDT() {
         render:
           colNM[1] === 'pushed_at'
             ? (data, type, _row) => {
-                if (type === 'display') {
-                  return moment(data).fromNow();
-                }
-                return data;
+              if (type === 'display') {
+                return moment(data).fromNow();
               }
+              return data;
+            }
             : null,
       };
     }),
@@ -109,17 +128,20 @@ function fetchAndShow(repo) {
       return response.json();
     })
     .then(data => {
-      console.log(data);
-      updateDT(data);
+      updateDT(data, repo);
     })
     .catch(error => {
-      const msg =
-        error.toString().indexOf('Forbidden') >= 0
-          ? 'Error: API Rate Limit Exceeded'
-          : error;
-      showMsg(`${msg}. Additional info in console`, 'danger');
-      console.error(error);
+      handleError(error);
     });
+}
+
+function handleError(error) {
+  const msg =
+    error.toString().indexOf('Forbidden') >= 0
+      ? 'Error: API Rate Limit Exceeded'
+      : error;
+  showMsg(`${msg}. Additional info in console`, 'danger');
+  console.error(error);
 }
 
 function showMsg(msg, type) {
