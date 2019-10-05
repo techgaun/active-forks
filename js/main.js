@@ -82,7 +82,6 @@ function initDT() {
     ['Size', 'size'],
     ['Last Push', 'pushed_at'],
     ['Status', 'status'],
-    ['Status', 'status'],
     ['Ahead by', 'ahead_by'],
     ['Behind by', 'behind_by'],
     ['Commits', 'total_commits'],
