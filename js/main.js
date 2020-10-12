@@ -1,5 +1,6 @@
 window.addEventListener('load', () => {
   initDT(); // Initialize the DatatTable and window.columnNames variables
+  addDarkmodeWidget();
 
   const repo = getRepoFromUrl();
 
@@ -13,6 +14,10 @@ document.getElementById('form').addEventListener('submit', e => {
   e.preventDefault();
   fetchData();
 });
+
+function addDarkmodeWidget() {
+  new Darkmode( { label: '🌓' } ).showWidget();
+}
 
 function fetchData() {
   const repo = document.getElementById('q').value;
