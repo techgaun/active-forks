@@ -17,7 +17,7 @@ Any time you're on a Github repo you can click the bookmarklet
 and it'll bring up the Active Forks of that repo.
 
 ```javascript
-javascript:var title=document.title;if(title){  thing=title.split(':');var newPage = 'https://techgaun.github.io/active-forks/index.html#'+thing[0];open(newPage ,'targetname')}
+javascript:thing=document.URL.match(/github.com\/([A-z][\w\-]*\/[A-z][\w\-]*)/);if (thing){var newPage = 'https://techgaun.github.io/active-forks/index.html#'+thing[1];open(newPage%20,'targetname')%20}%20else%20{window.alert("Not%20a%20valid%20GitHub%20page");}
 ```
 
 ![Screenshot](screenshot.png "Active Forks in Action")
