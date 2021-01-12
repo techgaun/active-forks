@@ -74,8 +74,8 @@ function initDT() {
     ['Last Push', 'pushed_at'],
   ];
 
-  // Sort by stars:
-  const sortColName = 'Stars';
+  // Sort by "Last Push":
+  const sortColName = 'Last Push';
   const sortColumnIdx = window.columnNamesMap
     .map(pair => pair[0])
     .indexOf(sortColName);
