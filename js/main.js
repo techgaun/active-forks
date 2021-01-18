@@ -47,7 +47,7 @@ function updateDT(data) {
   const forks = [];
   for (let fork of data) {
     fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`;
-    fork.ownerName = fork.owner.login;
+    fork.ownerName = fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>';
     forks.push(fork);
   }
   const dataSet = forks.map(fork =>
@@ -114,7 +114,6 @@ function fetchAndShow(repo) {
       return response.json();
     })
     .then(data => {
-      console.log(data);
       updateDT(data);
     })
     .catch(error => {
