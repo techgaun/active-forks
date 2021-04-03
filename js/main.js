@@ -98,7 +98,14 @@ function initDT() {
       };
     }),
     order: [[sortColumnIdx, 'desc']],
+    // paging: false,
+    searchBuilder:{
+      // all options at default        
+    }
   });
+  let table = window.forkTable;
+  new $.fn.dataTable.SearchBuilder(table, {});
+  table.searchBuilder.container().prependTo(table.table().container());
 }
 
 function fetchAndShow(repo) {
