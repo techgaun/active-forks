@@ -47,7 +47,7 @@ function updateDT(data) {
   const forks = [];
   for (let fork of data) {
     fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`;
-    fork.ownerName = fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>';
+    fork.ownerName = `<img src="${fork.owner.avatar_url || 'https://avatars.githubusercontent.com/u/0?v=4'}&s=48" width="24" height="24" class="mr-2 rounded-circle" />${fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>'}`;
     forks.push(fork);
   }
   const dataSet = forks.map(fork =>
@@ -100,7 +100,7 @@ function initDT() {
     order: [[sortColumnIdx, 'desc']],
     // paging: false,
     searchBuilder:{
-      // all options at default        
+      // all options at default
     }
   });
   let table = window.forkTable;
