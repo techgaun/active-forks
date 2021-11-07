@@ -20,7 +20,7 @@ function addDarkmodeWidget() {
 }
 
 function fetchData() {
-  const repo = document.getElementById('q').value;
+  const repo = document.getElementById('q').value.replaceAll(' ','');
   const re = /[-_\w]+\/[-_.\w]+/;
 
   const urlRepo = getRepoFromUrl();
