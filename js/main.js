@@ -72,6 +72,7 @@ function initDT() {
     ['Open Issues', 'open_issues_count'],
     ['Size', 'size'],
     ['Last Push', 'pushed_at'],
+    ['Update at', 'updated_at'],
   ];
 
   // Sort by stars:
@@ -87,7 +88,7 @@ function initDT() {
       return {
         title: colNM[0],
         render:
-          colNM[1] === 'pushed_at'
+            (colNM[1] === 'pushed_at') || (colNM[1] ==='updated_at')
             ? (data, type, _row) => {
                 if (type === 'display') {
                   return moment(data).fromNow();
