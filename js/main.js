@@ -112,10 +112,10 @@ function fetchAndShow(repo) {
   repo = repo.replace('https://github.com/', '');
   repo = repo.replace('http://github.com/', '');
   repo = repo.replace(/\.git$/, '');
-  repo = repo.replace(/^\s+/,''); // remove leading whitespace
-  repo = repo.replace(/\s+$/,''); // remove trailing whitespace
-  repo = repo.replace(/^\/+/,''); // remove leading slashes
-  repo = repo.replace(/\/+$/,''); // remove trailing slashes
+  repo = repo.replace(/^\s+/, ''); // remove leading whitespace
+  repo = repo.replace(/\s+$/, ''); // remove trailing whitespace
+  repo = repo.replace(/^\/+/, ''); // remove leading slashes
+  repo = repo.replace(/\/+$/, ''); // remove trailing slashes
 
   fetch(
     `https://api.github.com/repos/${repo}/forks?sort=stargazers&per_page=100`
