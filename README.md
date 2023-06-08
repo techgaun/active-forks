@@ -2,6 +2,12 @@
 
 > Find the active github forks of a project
 
+_NOTE: Looking for maintainer(s) to keep this project going_
+
+While I want to be able to spend some time on this, I've had a lot of changes in life in general
+and thus can not spend as much time on this repo. If you are interested in taking over to maintain
+this project, please file an issue.
+
 This project allows you to find the most active forks of a repository.
 
 [Find Active Fork](https://techgaun.github.io/active-forks/index.html)
