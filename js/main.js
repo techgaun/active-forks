@@ -102,7 +102,6 @@ function initDT() {
     .indexOf(sortColName);
 
   // Use first index for readable column name
-  // we use moment's fromNow() if we are rendering for `pushed_at`; better solution welcome
   window.forkTable = $('#forkTable').DataTable({
     columns: window.columnNamesMap.map(colNM => {
       return {
