@@ -59,6 +59,28 @@ function updateDT(data) {
     .draw();
 }
 
+// Will replace with JavaScript Temporal once supported in major browsers
+function howLongAgo(date) {
+  const relTime = new Intl.RelativeTimeFormat('en', { style: 'long' });
+  const startDateMilliseconds = Date.parse(date);
+  const endDateMilliseconds = Date.parse(new Date());
+
+  const elapsedSeconds = (endDateMilliseconds - startDateMilliseconds) / 1000;
+  const elapsedHours = elapsedSeconds / 60 / 60;
+  const elapsedDays = elapsedHours / 24;
+  const elapsedMonths = elapsedDays / 30;
+  const elapsedYears = elapsedDays / 365.25;
+
+  if(elapsedHours < 24)
+    return `${relTime.format(-Math.floor(elapsedHours), 'hour')}`;
+  else if(elapsedDays < 31)
+    return `${relTime.format(-Math.floor(elapsedDays, 'day'))}`;
+  else if(elapsedMonths < 12)
+    return `${relTime.format(-Math.floor(elapsedMonths, 'month'))}`;
+  else
+    return `${relTime.format(-Math.floor(elapsedYears, 'year'))}`;
+}
+
 function initDT() {
   // Create ordered Object with column name and mapped display name
   window.columnNamesMap = [
@@ -81,7 +103,6 @@ function initDT() {
     .indexOf(sortColName);
 
   // Use first index for readable column name
-  // we use moment's fromNow() if we are rendering for `pushed_at`; better solution welcome
   window.forkTable = $('#forkTable').DataTable({
     columns: window.columnNamesMap.map(colNM => {
       return {
@@ -90,7 +111,7 @@ function initDT() {
           colNM[1] === 'pushed_at'
             ? (data, type, _row) => {
                 if (type === 'display') {
-                  return moment(data).fromNow();
+                  return howLongAgo(data);
                 }
                 return data;
               }
