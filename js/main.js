@@ -69,7 +69,7 @@ function howLongAgo(date) {
   const elapsedHours = elapsedSeconds / 60 / 60;
   const elapsedDays = elapsedHours / 24;
   const elapsedMonths = elapsedDays / 30;
-  const elapsedYears = elapsedDays / 365;
+  const elapsedYears = elapsedDays / 365.25;
 
   if(elapsedHours < 24)
     return `${relTime.format(-Math.floor(elapsedHours), 'hour')}`;
