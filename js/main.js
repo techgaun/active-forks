@@ -59,6 +59,7 @@ function updateDT(data) {
     .draw();
 }
 
+// Will replace with JavaScript Temporal once supported in major browsers
 function howLongAgo(date) {
   const relTime = new Intl.RelativeTimeFormat('en', { style: 'long' });
   const startDateMilliseconds = Date.parse(date);
