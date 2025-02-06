@@ -61,7 +61,7 @@ function updateDT(data) {
 
 // Will replace with JavaScript Temporal once supported in major browsers
 function howLongAgo(date) {
-  const relTime = new Intl.RelativeTimeFormat('en', { style: 'long' });
+  const relTime = new Intl.RelativeTimeFormat(undefined, { style: 'long' });
   const startDateMilliseconds = Date.parse(date);
   const endDateMilliseconds = Date.parse(new Date());
 
@@ -72,13 +72,12 @@ function howLongAgo(date) {
   const elapsedYears = elapsedDays / 365.25;
 
   if(elapsedHours < 24)
-    return `${relTime.format(-Math.floor(elapsedHours), 'hour')}`;
-  else if(elapsedDays < 31)
-    return `${relTime.format(-Math.floor(elapsedDays, 'day'))}`;
-  else if(elapsedMonths < 12)
-    return `${relTime.format(-Math.floor(elapsedMonths, 'month'))}`;
-  else
-    return `${relTime.format(-Math.floor(elapsedYears, 'year'))}`;
+    return relTime.format(-Math.floor(elapsedHours), 'hour');
+  if(elapsedDays < 31)
+    return relTime.format(-Math.floor(elapsedDays), 'day');
+  if(elapsedMonths < 12)
+    return relTime.format(-Math.floor(elapsedMonths), 'month');
+  return relTime.format(-Math.floor(elapsedYears), 'year');
 }
 
 function initDT() {
