@@ -1,5 +1,8 @@
 th:nth-child(2) {
-	width: 30%;
+	width: 15%;
+}
+th:nth-child(3) {
+	width: 25%;
 }
 th, tr, td {
 	border: none;
