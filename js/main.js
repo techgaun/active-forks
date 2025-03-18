@@ -1,6 +1,6 @@
 window.addEventListener('load', () => {
   initDT(); // Initialize the DatatTable and window.columnNames variables
-  addDarkmodeWidget();
+  document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
 
   const repo = getRepoFromUrl();
 
@@ -14,10 +14,6 @@ document.getElementById('form').addEventListener('submit', e => {
   e.preventDefault();
   fetchData();
 });
-
-function addDarkmodeWidget() {
-  new Darkmode( { label: '🌓' } ).showWidget();
-}
 
 function fetchData() {
   const repo = document.getElementById('q').value.replaceAll(' ','');
@@ -182,4 +178,11 @@ function getRepoFromUrl() {
   const urlRepo = location.hash && location.hash.slice(1);
 
   return urlRepo && decodeURIComponent(urlRepo);
+}
+
+function toggleDarkMode(event) {
+  const button = event.target;
+  if(button.ariaPressed === 'false') button.ariaPressed = 'true';
+  else button.ariaPressed = 'false';
+  document.body.setAttribute('data-bs-theme', button.ariaPressed === 'true' ? 'dark' : 'light');
 }

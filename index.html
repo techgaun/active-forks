@@ -17,27 +17,21 @@
     <script type="text/javascript" src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/searchbuilder/1.8.2/js/dataTables.searchBuilder.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/searchbuilder/1.8.2/js/searchBuilder.bootstrap5.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>
 
     <style>
-        html { background: var(--bs-body-bg); }
-        body { min-height: 100vh; }
-        .darkmode-layer, .darkmode-toggle { z-index: 500; }
-        h3 > a { color: var(--bs-emphasis-color); }
         th:nth-child(2) { width: 30%; }
-        tbody tr:nth-child(odd) { background-color: var(--bs-tertiary-bg); }
-        table.dataTable th.dt-type-numeric, table.dataTable td.dt-type-numeric { text-align: start; }
+        #dark-mode-toggle { border: none; border-radius: 100%; background-color: var(--bs-emphasis-color); width: 3rem; height: 3rem; position: fixed; right: 2rem; bottom: 2rem; z-index: 5; }
     </style>
 </head>
 
-<body class='pt-4 pb-2'>
+<body class='pt-4 pb-2 bg-body'>
     <div class="container">
         <div class="row">
             <div class="col-sm-12 col-lg-12">
                 <div class="card">
                     <div class="card-header text-center">
                         <h3>
-                            <a href="https://github.com/techgaun/active-forks">
+                            <a href="https://github.com/techgaun/active-forks" class="text-body-emphasis">
                                 <i class="fa fa-github-alt pull-left" aria-hidden="true"></i>
                             </a>
                             Active GitHub Forks
@@ -59,12 +53,16 @@
                         </div>
 
                         <div id="data-body"></div>
-                        <table id="forkTable" class="display table-sm table-striped" width="100%"></table>
+                        <table id="forkTable" class="display table table-sm table-striped text-start" width="100%"></table>
                     </div>
                     <div id="footer" class="card-footer text-muted"></div>
                 </div>
             </div>
         </div>
     </div>
+    <button id="dark-mode-toggle" aria-pressed="false">
+        <span class="visually-hidden">Toggle Dark Mode</span>
+        <span aria-hidden="true">🌓</span>
+    </button>
     <script type="text/javascript" src="js/main.js"></script>
 </body>
