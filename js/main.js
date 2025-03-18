@@ -1,6 +1,7 @@
 window.addEventListener('load', () => {
   initDT(); // Initialize the DatatTable and window.columnNames variables
-  addDarkmodeWidget();
+  document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
+  if(localStorage.getItem('darkmode') === '1') document.body.setAttribute('data-bs-theme', 'dark');
 
   const repo = getRepoFromUrl();
 
@@ -14,10 +15,6 @@ document.getElementById('form').addEventListener('submit', e => {
   e.preventDefault();
   fetchData();
 });
-
-function addDarkmodeWidget() {
-  new Darkmode( { label: '🌓' } ).showWidget();
-}
 
 function fetchData() {
   const repo = document.getElementById('q').value.replaceAll(' ','');
@@ -47,7 +44,7 @@ function updateDT(data) {
   const forks = [];
   for (let fork of data) {
     fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`;
-    fork.ownerName = `<img src="${fork.owner.avatar_url || 'https://avatars.githubusercontent.com/u/0?v=4'}&s=48" width="24" height="24" class="mr-2 rounded-circle" />${fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>'}`;
+    fork.ownerName = `<img src="${fork.owner.avatar_url || 'https://avatars.githubusercontent.com/u/0?v=4'}&s=48" width="24" height="24" class="me-2 rounded-circle" />${fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>'}`;
     forks.push(fork);
   }
   const dataSet = forks.map(fork =>
@@ -182,4 +179,12 @@ function getRepoFromUrl() {
   const urlRepo = location.hash && location.hash.slice(1);
 
   return urlRepo && decodeURIComponent(urlRepo);
+}
+
+function toggleDarkMode(event) {
+  const button = event.target;
+  if(button.ariaPressed === 'true') button.ariaPressed = 'false';
+  else button.ariaPressed = 'true';
+  document.body.setAttribute('data-bs-theme', button.ariaPressed === 'true' ? 'dark' : 'light');
+  localStorage.setItem('darkmode', document.body.getAttribute('data-bs-theme') === 'dark' ? 1 : 0);
 }

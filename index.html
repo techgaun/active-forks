@@ -5,33 +5,29 @@
     <title>Active GitHub Forks</title>
 
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css"/>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/searchbuilder/1.0.1/css/searchBuilder.bootstrap4.min.css"/>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/searchbuilder/1.8.2/css/searchBuilder.bootstrap5.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="style.css">
 
-    <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/searchbuilder/1.0.1/js/dataTables.searchBuilder.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/searchbuilder/1.0.1/js/searchBuilder.bootstrap4.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>
-
-    <style>
-        .darkmode-layer, .darkmode-toggle { z-index: 500; }
-    </style>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha384-5AkRS45j4ukf+JbWAfHL8P4onPA9p0KwwP7pUdjSQA3ss9edbJUJc/XcYAiheSSz" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/searchbuilder/1.8.2/js/dataTables.searchBuilder.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/searchbuilder/1.8.2/js/searchBuilder.bootstrap5.min.js"></script>
 </head>
 
-<body class='mt-4 mb-2'>
+<body class='pt-4 pb-2 bg-body'>
     <div class="container">
         <div class="row">
             <div class="col-sm-12 col-lg-12">
                 <div class="card">
                     <div class="card-header text-center">
                         <h3>
-                            <a href="https://github.com/techgaun/active-forks" class="text-dark">
+                            <a href="https://github.com/techgaun/active-forks" class="text-body-emphasis">
                                 <i class="fa fa-github-alt pull-left" aria-hidden="true"></i>
                             </a>
                             Active GitHub Forks
@@ -39,10 +35,10 @@
                     </div>
 
                     <div class="card-body">
-                        <div class="form-group">
+                        <div class="mb-3">
                           <form id="form" role="form">
                               <div class="input-group">
-                                  <input id="q" name="q" class="form-control" type="text" placeholder="techgaun/github-dorks">
+                                  <input id="q" name="q" class="form-control" type="text" placeholder="techgaun/github-dorks" spellcheck="false">
                                   <span class="input-group-btn">
                                       <button id="find" onClick="fetchData()" type="button" class="btn btn-primary">
                                           <i id="spinner" class="fa fa-spinner fa-pulse fa-fw" hidden></i> Find
@@ -53,12 +49,16 @@
                         </div>
 
                         <div id="data-body"></div>
-                        <table id="forkTable" class="display table-sm table-striped" width="100%"></table>
+                        <table id="forkTable" class="display table table-sm table-striped text-start" width="100%"></table>
                     </div>
                     <div id="footer" class="card-footer text-muted"></div>
                 </div>
             </div>
         </div>
     </div>
+    <button id="dark-mode-toggle" aria-pressed="false">
+        <span class="visually-hidden">Toggle Dark Mode</span>
+        <span aria-hidden="true">🌓</span>
+    </button>
     <script type="text/javascript" src="js/main.js"></script>
 </body>
