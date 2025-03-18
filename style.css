@@ -34,6 +34,6 @@ table.dataTable thead > tr > td.dt-ordering-asc span.dt-column-order:before,
 table.dataTable thead > tr > td.dt-ordering-desc span.dt-column-order:after {
 	opacity: 1;
 }
-table.dataTable th.dt-type-numeric {
-	text-align: left;
+table.dataTable th.dt-type-numeric, table.dataTable td.dt-type-numeric {
+	text-align: start;
 }
