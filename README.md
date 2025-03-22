@@ -26,4 +26,10 @@ and it'll bring up the Active Forks of that repo.
 javascript:(function(){if(window.location.hostname.match(/github.com+/)){var%20a=window.location.pathname.split('/',3);if(a.length==3){var%20b=encodeURIComponent(a[1]+'/'+a[2]);window.open('https://techgaun.github.io/active-forks/index.html#'+b,'_blank','noreferrer,noopener');return}}window.alert('Not%20a%20valid%20GitHub%20page')})();
 ```
 
-![Screenshot](screenshot.png "Active Forks in Action")
+![Active Forks in Action](screenshot.png "Active Forks in Action")
+
+## Licensing
+
+This repository is available under either [the Apache License version 2.0](LICENSE) or (at your option) [the European Union Public License version 1.2](LICENSE-ALT).
+
+`SPDX-License-Identifier: Apache-2.0 OR EUPL-1.2`
