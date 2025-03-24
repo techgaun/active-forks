@@ -44,3 +44,10 @@ table.dataTable th.dt-type-numeric, table.dataTable td.dt-type-numeric {
 	outline: 0.125rem solid white;
 	box-shadow: 0 0 0 0.25rem blue;
 }
+button:focus:not(:focus-visible) {
+	box-shadow: none;
+}
+.form-control:focus-visible, .btn-primary:focus-visible, .btn-secondary:focus-visible, .form-select:focus-visible, .dt-column-order:focus-visible, .dt-layout-full:focus-visible, table a:focus-visible, .page-link:focus-visible {
+	outline: 0.125rem solid white;
+	box-shadow: 0 0 0 0.25rem blue;
+}
