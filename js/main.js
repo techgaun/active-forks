@@ -196,5 +196,5 @@ function makeTableKeyboardScrollable() {
   tableContainer.setAttribute('aria-labelledby', 'table-container-label');
   tableContainer.setAttribute('role', 'region');
   tableContainer.setAttribute('tabindex', '0');
-  tableContainer.style.overflowX = 'auto';
+  tableContainer.classList.add('table-responsive');
 }
