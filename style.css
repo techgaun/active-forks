@@ -40,3 +40,7 @@ table.dataTable thead > tr > td.dt-ordering-desc span.dt-column-order:after {
 table.dataTable th.dt-type-numeric, table.dataTable td.dt-type-numeric {
 	text-align: start;
 }
+.form-control:focus, .btn-primary:focus, .btn-secondary:focus, .form-select:focus, .dt-column-order:focus, .dt-layout-full:focus, table a:focus, .page-link:focus {
+	outline: 0.125rem solid white;
+	box-shadow: 0 0 0 0.25rem blue;
+}
