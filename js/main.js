@@ -54,6 +54,7 @@ function updateDT(data) {
     .clear()
     .rows.add(dataSet)
     .draw();
+  makeTableKeyboardScrollable();
 }
 
 // Will replace with JavaScript Temporal once supported in major browsers
@@ -125,6 +126,7 @@ function initDT() {
   let table = window.forkTable;
   new $.fn.dataTable.SearchBuilder(table, {});
   table.searchBuilder.container().prependTo(table.table().container());
+  makeTableKeyboardScrollable();
 }
 
 function fetchAndShow(repo) {
@@ -187,4 +189,12 @@ function toggleDarkMode(event) {
   else button.ariaPressed = 'true';
   document.body.setAttribute('data-bs-theme', button.ariaPressed === 'true' ? 'dark' : 'light');
   localStorage.setItem('darkmode', document.body.getAttribute('data-bs-theme') === 'dark' ? 1 : 0);
+}
+
+function makeTableKeyboardScrollable() {
+  const tableContainer = document.querySelector('.dt-layout-full');
+  tableContainer.setAttribute('aria-labelledby', 'table-container-label');
+  tableContainer.setAttribute('role', 'region');
+  tableContainer.setAttribute('tabindex', '0');
+  tableContainer.classList.add('table-responsive');
 }
