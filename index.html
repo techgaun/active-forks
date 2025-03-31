@@ -20,45 +20,45 @@
     <script type="text/javascript" src="https://cdn.datatables.net/searchbuilder/1.8.2/js/searchBuilder.bootstrap5.min.js"></script>
 </head>
 
-<body class='pt-4 pb-2 bg-body'>
-    <div class="container">
+<body class="bg-body">
+    <div class="container pt-4 pb-2">
         <div class="row">
             <div class="col-sm-12 col-lg-12">
                 <div class="card">
-                    <div class="card-header text-center">
-                        <h3>
+                    <header class="card-header text-center">
+                        <h1 class="h3">
                             <a href="https://github.com/techgaun/active-forks" class="text-body-emphasis">
                                 <i class="fa fa-github-alt pull-left" aria-hidden="true"></i>
                             </a>
                             Active GitHub Forks
-                        </h3>
-                    </div>
+                        </h1>
+                    </header>
 
-                    <div class="card-body">
-                        <div class="mb-3">
-                          <form id="form" role="form">
-                              <div class="input-group">
-                                  <input id="q" name="q" class="form-control" type="text" placeholder="techgaun/github-dorks" spellcheck="false">
-                                  <span class="input-group-btn">
-                                      <button id="find" onClick="fetchData()" type="button" class="btn btn-primary">
-                                          <i id="spinner" class="fa fa-spinner fa-pulse fa-fw" hidden></i> Find
-                                      </button>
-                                  </span>
-                              </div>
-                          </form>
-                        </div>
+                    <main class="card-body">
+                        <search class="mb-3">
+                            <form id="form">
+                                <div class="input-group">
+                                    <input id="q" name="q" class="form-control" type="text" placeholder="techgaun/github-dorks" spellcheck="false">
+                                    <span class="input-group-btn">
+                                        <button id="find" onClick="fetchData()" type="button" class="btn btn-primary">
+                                            <i id="spinner" class="fa fa-spinner fa-pulse fa-fw" hidden></i> Find
+                                        </button>
+                                    </span>
+                                </div>
+                            </form>
+                        </search>
 
                         <div id="data-body"></div>
                         <table id="forkTable" class="display table table-sm table-striped text-start" width="100%"></table>
-                    </div>
-                    <div id="footer" class="card-footer text-muted"></div>
+                    </main>
+                    <button id="dark-mode-toggle" aria-pressed="false">
+                        <span class="visually-hidden">Toggle Dark Mode</span>
+                        <span aria-hidden="true">🌓</span>
+                    </button>
+                    <footer id="footer" class="card-footer text-muted"></footer>
                 </div>
             </div>
         </div>
     </div>
-    <button id="dark-mode-toggle" aria-pressed="false">
-        <span class="visually-hidden">Toggle Dark Mode</span>
-        <span aria-hidden="true">🌓</span>
-    </button>
     <script type="text/javascript" src="js/main.js"></script>
 </body>
