@@ -9,6 +9,13 @@ rather than version.
 
 ### Added
 
+- Three new columns ([#105](https://github.com/techgaun/active-forks/pull/105)):
+  Created (fork creation date), Issues Enabled, and Release — the latest
+  release tag, linked to its release page. Fork releases are fetched through
+  the same batched GraphQL request as the ahead/behind counts and therefore
+  need a token; the upstream row's release is fetched via REST and shows
+  without one.
+
 - Non-zero Ahead/Behind counts link to GitHub's compare view, showing the
   fork's unique commits (Ahead) or the upstream commits the fork lacks
   (Behind) ([#103](https://github.com/techgaun/active-forks/pull/103)).

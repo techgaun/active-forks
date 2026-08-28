@@ -76,6 +76,7 @@ function updateDT(data) {
   for (let fork of data) {
     if (fork.ahead_by === undefined) fork.ahead_by = null;
     if (fork.behind_by === undefined) fork.behind_by = null;
+    if (fork.latest_release === undefined) fork.latest_release = null;
     fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`;
     const avatarUrl = (fork.owner && fork.owner.avatar_url) || 'https://avatars.githubusercontent.com/u/0?v=4';
     fork.ownerName = `<img src="${avatarUrl}&s=48" width="24" height="24" loading="lazy" decoding="async" class="me-2 rounded-circle" />${fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>'}`;
@@ -135,13 +136,43 @@ function humanizeSize(kilobytes) {
   }).format(value);
 }
 
+function escapeHtml(text) {
+  return String(text).replace(
+    /[&<>"']/g,
+    c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+  );
+}
+
 function getColumnRenderer(key) {
-  if (key === 'pushed_at') {
+  if (key === 'pushed_at' || key === 'created_at') {
     return (data, type, _row) => {
       if (type === 'display') {
         return howLongAgo(data);
       }
       return data;
+    };
+  }
+  if (key === 'has_issues') {
+    return (data, type, _row) => {
+      if (type === 'display' || type === 'filter') {
+        return data ? 'Yes' : 'No';
+      }
+      return data ? 1 : 0;
+    };
+  }
+  if (key === 'latest_release') {
+    // null means no release found (or not fetched yet — requires a token)
+    return (data, type, _row) => {
+      if (!data) {
+        return type === 'display' || type === 'filter' ? '–' : '';
+      }
+      if (type === 'display') {
+        return `<a href="${escapeHtml(data.url)}">${escapeHtml(data.tagName)}</a>`;
+      }
+      if (type === 'filter') {
+        return data.tagName;
+      }
+      return data.publishedAt || ''; // order chronologically
     };
   }
   if (key === 'size') {
@@ -188,8 +219,11 @@ function initDT() {
     ['Stars', 'stargazers_count'],
     ['Forks', 'forks'],
     ['Open Issues', 'open_issues_count'],
+    ['Issues Enabled', 'has_issues'],
+    ['Release', 'latest_release'], // custom key, filled in by startAheadBehind
     ['Size', 'size'],
     ['Last Push', 'pushed_at'],
+    ['Created', 'created_at'],
   ];
 
   // Sort by stars:
@@ -268,15 +302,20 @@ async function startAheadBehind(repo, baseBranch, forks, headers, signal) {
   const table = window.forkTable;
   const aheadColIdx = window.columnNamesMap.findIndex(colNM => colNM[1] === 'ahead_by');
   const behindColIdx = window.columnNamesMap.findIndex(colNM => colNM[1] === 'behind_by');
+  const releaseColIdx = window.columnNamesMap.findIndex(colNM => colNM[1] === 'latest_release');
   const queue = [];
   const queued = new Set(); // row indexes already fetched or in flight
   let pumping = false;
   let capWarned = false;
 
-  // Does not redraw — callers draw once per batch of updates
+  // These do not redraw — callers draw once per batch of updates
   const applyResult = (rowIdx, ahead, behind) => {
     table.cell(rowIdx, aheadColIdx).data(ahead);
     table.cell(rowIdx, behindColIdx).data(behind);
+  };
+  const applyRelease = (fork, rowIdx, release) => {
+    fork.latest_release = release; // survives redraws sourced from the fork object
+    table.cell(rowIdx, releaseColIdx).data(release);
   };
 
   const compareOnce = async (login, branch) => {
@@ -330,15 +369,23 @@ async function startAheadBehind(repo, baseBranch, forks, headers, signal) {
   // Returns per-fork results aligned with the batch; unresolvable refs are null.
   const [upstreamOwner, upstreamName] = repo.split('/');
   const batchCompare = async batch => {
-    const fields = batch
+    const compareFields = batch
       .map(
         ({ fork }, i) =>
           `f${i}: compare(headRef: ${JSON.stringify(`${fork.owner.login}:${fork.default_branch}`)}) { aheadBy behindBy }`
       )
       .join(' ');
+    // Fetch each fork's latest release in the same request
+    const releaseFields = batch
+      .map(
+        ({ fork }, i) =>
+          `r${i}: repository(owner: ${JSON.stringify(fork.owner.login)}, name: ${JSON.stringify(fork.name)}) ` +
+          '{ latestRelease { tagName url publishedAt } }'
+      )
+      .join(' ');
     const query =
       `query { repository(owner: ${JSON.stringify(upstreamOwner)}, name: ${JSON.stringify(upstreamName)}) ` +
-      `{ defaultBranchRef { ${fields} } } }`;
+      `{ defaultBranchRef { ${compareFields} } } ${releaseFields} }`;
     const response = await fetch('https://api.github.com/graphql', {
       method: 'POST',
       headers,
@@ -347,9 +394,13 @@ async function startAheadBehind(repo, baseBranch, forks, headers, signal) {
     });
     if (!response.ok) throw Error(response.statusText);
     const payload = await response.json();
-    const ref = payload.data && payload.data.repository && payload.data.repository.defaultBranchRef;
+    const data = payload.data;
+    const ref = data && data.repository && data.repository.defaultBranchRef;
     if (!ref) throw Error('GraphQL compare returned no data');
-    return batch.map((_item, i) => ref[`f${i}`] || null);
+    return batch.map((_item, i) => ({
+      compare: ref[`f${i}`] || null,
+      release: (data[`r${i}`] && data[`r${i}`].latestRelease) || null,
+    }));
   };
 
   const pump = () => {
@@ -365,15 +416,18 @@ async function startAheadBehind(repo, baseBranch, forks, headers, signal) {
           } catch (error) {
             if (error.name === 'AbortError') return;
             console.error('GraphQL batch compare failed; falling back to REST', error);
-            results = batch.map(() => null);
+            results = batch.map(() => ({ compare: null, release: null }));
           }
           const failed = [];
           results.forEach((result, i) => {
-            if (result) {
-              const { fork, rowIdx } = batch[i];
+            const { fork, rowIdx } = batch[i];
+            if (result.release) {
+              applyRelease(fork, rowIdx, result.release);
+            }
+            if (result.compare) {
               fork.compareOwner = fork.owner.login;
               fork.compareBranch = fork.default_branch;
-              applyResult(rowIdx, result.aheadBy, result.behindBy);
+              applyResult(rowIdx, result.compare.aheadBy, result.compare.behindBy);
             } else {
               failed.push(batch[i]);
             }
@@ -468,11 +522,31 @@ function fetchAndShow(repo) {
     return response.json();
   });
 
-  Promise.all([upstreamPromise, fetchForkPages(repo, headers, maxPages, controller.signal)])
-    .then(async ([upstream, { forks, truncated }]) => {
+  // The upstream's latest release comes via REST so it also works without a
+  // token; 404 (no releases) is expected
+  const upstreamReleasePromise = fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+    headers,
+    signal: controller.signal,
+  })
+    .then(response => (response.ok ? response.json() : null))
+    .catch(() => null);
+
+  Promise.all([
+    upstreamPromise,
+    upstreamReleasePromise,
+    fetchForkPages(repo, headers, maxPages, controller.signal),
+  ])
+    .then(async ([upstream, upstreamRelease, { forks, truncated }]) => {
       // Show the upstream repository itself as the first row (it usually also
       // leads the default sort by stars)
       upstream.isUpstream = true;
+      if (upstreamRelease) {
+        upstream.latest_release = {
+          tagName: upstreamRelease.tag_name,
+          url: upstreamRelease.html_url,
+          publishedAt: upstreamRelease.published_at,
+        };
+      }
       forks.unshift(upstream);
       updateDT(forks);
 
