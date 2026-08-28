@@ -79,8 +79,12 @@ function updateDT(data) {
     fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`;
     const avatarUrl = (fork.owner && fork.owner.avatar_url) || 'https://avatars.githubusercontent.com/u/0?v=4';
     fork.ownerName = `<img src="${avatarUrl}&s=48" width="24" height="24" loading="lazy" decoding="async" class="me-2 rounded-circle" />${fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>'}`;
+    if (fork.isUpstream) {
+      fork.ownerName += ' <span class="badge text-bg-secondary">upstream</span>';
+    }
     forks.push(fork);
   }
+  window.currentForks = forks;
   const dataSet = forks.map(fork =>
     window.columnNamesMap.map(colNM => fork[colNM[1]])
   );
@@ -150,9 +154,20 @@ function getColumnRenderer(key) {
   }
   if (key === 'ahead_by' || key === 'behind_by') {
     // null means unknown (no token, compare failed, or not fetched yet)
-    return (data, type, _row) => {
+    return (data, type, _row, meta) => {
       if (data === null) {
         return type === 'display' ? '–' : -1;
+      }
+      if (type === 'display' && data > 0) {
+        // Link to GitHub's compare view: Ahead shows the fork's unique
+        // commits, Behind shows what upstream has that the fork lacks
+        const fork = window.currentForks && window.currentForks[meta.row];
+        if (fork && fork.compareOwner && window.currentRepo && window.compareBaseBranch) {
+          const base = encodeURIComponent(window.compareBaseBranch);
+          const head = `${encodeURIComponent(fork.compareOwner)}:${encodeURIComponent(fork.compareBranch)}`;
+          const range = key === 'ahead_by' ? `${base}...${head}` : `${head}...${base}`;
+          return `<a href="https://github.com/${window.currentRepo}/compare/${range}">${data}</a>`;
+        }
       }
       return data;
     };
@@ -244,17 +259,10 @@ async function fetchForkPages(repo, headers, maxPages, signal) {
 const COMPARE_MAX = 400;
 const COMPARE_CONCURRENCY = 8;
 
-async function startAheadBehind(repo, forks, headers, signal) {
-  let baseBranch;
-  try {
-    const response = await fetch(`https://api.github.com/repos/${repo}`, { headers, signal });
-    if (!response.ok) throw Error(response.statusText);
-    baseBranch = (await response.json()).default_branch;
-  } catch (error) {
-    if (error.name !== 'AbortError') console.error('Could not determine upstream default branch', error);
-    return;
-  }
-  if (signal.aborted) return;
+async function startAheadBehind(repo, baseBranch, forks, headers, signal) {
+  // Context for rendering ahead/behind cells as links to GitHub's compare view
+  window.currentRepo = repo;
+  window.compareBaseBranch = baseBranch;
 
   const table = window.forkTable;
   const aheadColIdx = window.columnNamesMap.findIndex(colNM => colNM[1] === 'ahead_by');
@@ -286,9 +294,11 @@ async function startAheadBehind(repo, forks, headers, signal) {
       if (signal.aborted) return;
       const { fork, rowIdx } = queue.shift();
       try {
+        let login = fork.owner.login;
+        let branch = fork.default_branch;
         let comparison;
         try {
-          comparison = await compareOnce(fork.owner.login, fork.default_branch);
+          comparison = await compareOnce(login, branch);
         } catch (error) {
           if (error.status !== 404) throw error;
           // The forks listing can be stale: the fork may have been renamed or
@@ -296,14 +306,16 @@ async function startAheadBehind(repo, forks, headers, signal) {
           const response = await fetch(`https://api.github.com/repositories/${fork.id}`, { headers, signal });
           if (!response.ok) throw error;
           const current = await response.json();
-          if (
-            current.owner.login === fork.owner.login &&
-            current.default_branch === fork.default_branch
-          ) {
+          if (current.owner.login === login && current.default_branch === branch) {
             throw error; // same coordinates, e.g. an empty fork — retrying won't help
           }
-          comparison = await compareOnce(current.owner.login, current.default_branch);
+          login = current.owner.login;
+          branch = current.default_branch;
+          comparison = await compareOnce(login, branch);
         }
+        // Remember the coordinates that worked so cells can link to them
+        fork.compareOwner = login;
+        fork.compareBranch = branch;
         applyResult(rowIdx, comparison.ahead_by, comparison.behind_by);
       } catch (error) {
         if (error.name === 'AbortError') return;
@@ -334,7 +346,7 @@ async function startAheadBehind(repo, forks, headers, signal) {
     }
     // Row indexes match the order forks were added in updateDT
     const fork = forks[rowIdx];
-    if (!fork || !fork.owner) return;
+    if (!fork || !fork.owner || fork.isUpstream) return;
     queued.add(rowIdx);
     queue.push({ fork, rowIdx });
   };
@@ -395,13 +407,25 @@ function fetchAndShow(repo) {
   const spinner = document.getElementById('spinner');
   spinner.hidden = false;
 
-  fetchForkPages(repo, headers, maxPages, controller.signal)
-    .then(async ({ forks, truncated }) => {
+  const upstreamPromise = fetch(`https://api.github.com/repos/${repo}`, {
+    headers,
+    signal: controller.signal,
+  }).then(response => {
+    if (!response.ok) throw Error(response.statusText);
+    return response.json();
+  });
+
+  Promise.all([upstreamPromise, fetchForkPages(repo, headers, maxPages, controller.signal)])
+    .then(async ([upstream, { forks, truncated }]) => {
+      // Show the upstream repository itself as the first row (it usually also
+      // leads the default sort by stars)
+      upstream.isUpstream = true;
+      forks.unshift(upstream);
       updateDT(forks);
 
       const notices = [];
       if (truncated) {
-        notices.push(`Showing the first ${forks.length} forks`);
+        notices.push(`Showing the first ${forks.length - 1} forks`);
       }
       if (!token) {
         notices.push(
@@ -411,7 +435,7 @@ function fetchAndShow(repo) {
       if (notices.length) showMsg(`${notices.join('. ')}.`, 'info');
 
       if (token && forks.length) {
-        startAheadBehind(repo, forks, headers, controller.signal);
+        startAheadBehind(repo, upstream.default_branch, forks, headers, controller.signal);
       }
     })
     .catch(error => {
