@@ -9,6 +9,13 @@ rather than version.
 
 ### Added
 
+- Non-zero Ahead/Behind counts link to GitHub's compare view, showing the
+  fork's unique commits (Ahead) or the upstream commits the fork lacks
+  (Behind) ([#103](https://github.com/techgaun/active-forks/pull/103)).
+- The searched repository itself is shown as the table's first row with an
+  "upstream" badge, as a baseline to compare forks against
+  ([#103](https://github.com/techgaun/active-forks/pull/103)).
+
 - Ahead/Behind columns showing how many commits each fork's default branch is
   ahead of / behind the upstream default branch, computed via the GitHub
   compare API ([#100](https://github.com/techgaun/active-forks/pull/100)).
