@@ -121,8 +121,8 @@ function initDT() {
     ['Owner', 'ownerName'], // custom key
     ['Name', 'name'],
     ['Branch', 'default_branch'],
-    ['Ahead', 'ahead_by'], // custom key, filled in by fetchAheadBehind
-    ['Behind', 'behind_by'], // custom key, filled in by fetchAheadBehind
+    ['Ahead', 'ahead_by'], // custom key, filled in by startAheadBehind
+    ['Behind', 'behind_by'], // custom key, filled in by startAheadBehind
     ['Stars', 'stargazers_count'],
     ['Forks', 'forks'],
     ['Open Issues', 'open_issues_count'],
@@ -191,11 +191,13 @@ async function fetchForkPages(repo, headers, maxPages, signal) {
 }
 
 // Each ahead/behind lookup costs one API request per fork, so only run them
-// when a token (5,000 requests/hour) is configured, and cap the total
+// when a token (5,000 requests/hour) is configured, and only for rows on the
+// currently visible table page — more are fetched on demand as the user
+// pages, sorts or filters. COMPARE_MAX is a per-search safety cap.
 const COMPARE_MAX = 400;
 const COMPARE_CONCURRENCY = 8;
 
-async function fetchAheadBehind(repo, forks, headers, signal) {
+async function startAheadBehind(repo, forks, headers, signal) {
   let baseBranch;
   try {
     const response = await fetch(`https://api.github.com/repos/${repo}`, { headers, signal });
@@ -205,23 +207,20 @@ async function fetchAheadBehind(repo, forks, headers, signal) {
     if (error.name !== 'AbortError') console.error('Could not determine upstream default branch', error);
     return;
   }
+  if (signal.aborted) return;
 
+  const table = window.forkTable;
   const aheadColIdx = window.columnNamesMap.findIndex(colNM => colNM[1] === 'ahead_by');
   const behindColIdx = window.columnNamesMap.findIndex(colNM => colNM[1] === 'behind_by');
-  // Row indexes in the DataTable match the order forks were added in updateDT
-  const queue = forks
-    .map((fork, rowIdx) => ({ fork, rowIdx }))
-    .filter(({ fork }) => fork.owner);
-  let updatesSinceDraw = 0;
+  const queue = [];
+  const queued = new Set(); // row indexes already fetched or in flight
+  let activeWorkers = 0;
+  let capWarned = false;
 
   const applyResult = (rowIdx, ahead, behind) => {
-    window.forkTable.cell(rowIdx, aheadColIdx).data(ahead);
-    window.forkTable.cell(rowIdx, behindColIdx).data(behind);
-    // Redraw in batches so large fork lists don't thrash the table
-    if (++updatesSinceDraw >= 20) {
-      updatesSinceDraw = 0;
-      window.forkTable.draw(false);
-    }
+    table.cell(rowIdx, aheadColIdx).data(ahead);
+    table.cell(rowIdx, behindColIdx).data(behind);
+    table.draw(false);
   };
 
   const compareOnce = async (login, branch) => {
@@ -266,8 +265,45 @@ async function fetchAheadBehind(repo, forks, headers, signal) {
     }
   };
 
-  await Promise.all(Array.from({ length: COMPARE_CONCURRENCY }, worker));
-  window.forkTable.draw(false);
+  const spawnWorkers = () => {
+    // worker() dequeues its first item synchronously, so queue.length shrinks each spin
+    while (activeWorkers < COMPARE_CONCURRENCY && queue.length) {
+      activeWorkers++;
+      worker().finally(() => {
+        activeWorkers--;
+        if (queue.length) spawnWorkers();
+      });
+    }
+  };
+
+  // Queue lookups for the rows on the currently displayed page only
+  const enqueueVisiblePage = () => {
+    if (signal.aborted) return;
+    table
+      .rows({ page: 'current', search: 'applied', order: 'applied' })
+      .indexes()
+      .each(rowIdx => {
+        if (queued.has(rowIdx)) return;
+        if (queued.size >= COMPARE_MAX) {
+          if (!capWarned) {
+            capWarned = true;
+            console.warn(`Ahead/behind lookups capped at ${COMPARE_MAX} forks for this search`);
+          }
+          return;
+        }
+        // Row indexes match the order forks were added in updateDT
+        const fork = forks[rowIdx];
+        if (!fork || !fork.owner) return;
+        queued.add(rowIdx);
+        queue.push({ fork, rowIdx });
+      });
+    spawnWorkers();
+  };
+
+  table.off('draw.dt.aheadBehind');
+  table.on('draw.dt.aheadBehind', enqueueVisiblePage);
+  signal.addEventListener('abort', () => table.off('draw.dt.aheadBehind'));
+  enqueueVisiblePage();
 }
 
 function fetchAndShow(repo) {
@@ -305,13 +341,11 @@ function fetchAndShow(repo) {
         notices.push(
           'Add a GitHub token below the search box to fetch more forks and see ahead/behind commit counts'
         );
-      } else if (forks.length > COMPARE_MAX) {
-        notices.push(`Ahead/behind is computed for the first ${COMPARE_MAX} forks only`);
       }
       if (notices.length) showMsg(`${notices.join('. ')}.`, 'info');
 
       if (token && forks.length) {
-        await fetchAheadBehind(repo, forks.slice(0, COMPARE_MAX), headers, controller.signal);
+        startAheadBehind(repo, forks, headers, controller.signal);
       }
     })
     .catch(error => {
