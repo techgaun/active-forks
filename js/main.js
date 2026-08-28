@@ -257,7 +257,8 @@ async function fetchForkPages(repo, headers, maxPages, signal) {
 // currently visible table page — more are fetched on demand as the user
 // pages, sorts or filters. COMPARE_MAX is a per-search safety cap.
 const COMPARE_MAX = 400;
-const COMPARE_CONCURRENCY = 8;
+// Number of forks resolved per GraphQL request (one aliased compare each)
+const GRAPHQL_BATCH_SIZE = 50;
 
 async function startAheadBehind(repo, baseBranch, forks, headers, signal) {
   // Context for rendering ahead/behind cells as links to GitHub's compare view
@@ -269,13 +270,13 @@ async function startAheadBehind(repo, baseBranch, forks, headers, signal) {
   const behindColIdx = window.columnNamesMap.findIndex(colNM => colNM[1] === 'behind_by');
   const queue = [];
   const queued = new Set(); // row indexes already fetched or in flight
-  let activeWorkers = 0;
+  let pumping = false;
   let capWarned = false;
 
+  // Does not redraw — callers draw once per batch of updates
   const applyResult = (rowIdx, ahead, behind) => {
     table.cell(rowIdx, aheadColIdx).data(ahead);
     table.cell(rowIdx, behindColIdx).data(behind);
-    table.draw(false);
   };
 
   const compareOnce = async (login, branch) => {
@@ -289,50 +290,102 @@ async function startAheadBehind(repo, baseBranch, forks, headers, signal) {
     return response.json();
   };
 
-  const worker = async () => {
-    while (queue.length) {
-      if (signal.aborted) return;
-      const { fork, rowIdx } = queue.shift();
+  // REST fallback for a single fork, with the by-id rename rescue. Used for
+  // forks the GraphQL batch could not resolve (renamed/stale listing entries)
+  // and as the wholesale fallback when a GraphQL request itself fails.
+  const restCompareItem = async ({ fork, rowIdx }) => {
+    try {
+      let login = fork.owner.login;
+      let branch = fork.default_branch;
+      let comparison;
       try {
-        let login = fork.owner.login;
-        let branch = fork.default_branch;
-        let comparison;
-        try {
-          comparison = await compareOnce(login, branch);
-        } catch (error) {
-          if (error.status !== 404) throw error;
-          // The forks listing can be stale: the fork may have been renamed or
-          // deleted since. Look it up by immutable id and retry once if renamed.
-          const response = await fetch(`https://api.github.com/repositories/${fork.id}`, { headers, signal });
-          if (!response.ok) throw error;
-          const current = await response.json();
-          if (current.owner.login === login && current.default_branch === branch) {
-            throw error; // same coordinates, e.g. an empty fork — retrying won't help
-          }
-          login = current.owner.login;
-          branch = current.default_branch;
-          comparison = await compareOnce(login, branch);
-        }
-        // Remember the coordinates that worked so cells can link to them
-        fork.compareOwner = login;
-        fork.compareBranch = branch;
-        applyResult(rowIdx, comparison.ahead_by, comparison.behind_by);
+        comparison = await compareOnce(login, branch);
       } catch (error) {
-        if (error.name === 'AbortError') return;
-        // fork deleted, private, or empty — leave cells unknown
+        if (error.status !== 404) throw error;
+        // The forks listing can be stale: the fork may have been renamed or
+        // deleted since. Look it up by immutable id and retry once if renamed.
+        const response = await fetch(`https://api.github.com/repositories/${fork.id}`, { headers, signal });
+        if (!response.ok) throw error;
+        const current = await response.json();
+        if (current.owner.login === login && current.default_branch === branch) {
+          throw error; // same coordinates, e.g. an empty fork — retrying won't help
+        }
+        login = current.owner.login;
+        branch = current.default_branch;
+        comparison = await compareOnce(login, branch);
       }
+      // Remember the coordinates that worked so cells can link to them
+      fork.compareOwner = login;
+      fork.compareBranch = branch;
+      applyResult(rowIdx, comparison.ahead_by, comparison.behind_by);
+      table.draw(false);
+    } catch (error) {
+      if (error.name === 'AbortError') return;
+      // fork deleted, private, or empty — leave cells unknown
     }
   };
 
-  const spawnWorkers = () => {
-    // worker() dequeues its first item synchronously, so queue.length shrinks each spin
-    while (activeWorkers < COMPARE_CONCURRENCY && queue.length) {
-      activeWorkers++;
-      worker().finally(() => {
-        activeWorkers--;
-        if (queue.length) spawnWorkers();
-      });
-    }
+  // Resolve a whole batch with one GraphQL request: an aliased compare per
+  // fork costs a single rate-limit point, vs one REST request per fork.
+  // Returns per-fork results aligned with the batch; unresolvable refs are null.
+  const [upstreamOwner, upstreamName] = repo.split('/');
+  const batchCompare = async batch => {
+    const fields = batch
+      .map(
+        ({ fork }, i) =>
+          `f${i}: compare(headRef: ${JSON.stringify(`${fork.owner.login}:${fork.default_branch}`)}) { aheadBy behindBy }`
+      )
+      .join(' ');
+    const query =
+      `query { repository(owner: ${JSON.stringify(upstreamOwner)}, name: ${JSON.stringify(upstreamName)}) ` +
+      `{ defaultBranchRef { ${fields} } } }`;
+    const response = await fetch('https://api.github.com/graphql', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ query }),
+      signal,
+    });
+    if (!response.ok) throw Error(response.statusText);
+    const payload = await response.json();
+    const ref = payload.data && payload.data.repository && payload.data.repository.defaultBranchRef;
+    if (!ref) throw Error('GraphQL compare returned no data');
+    return batch.map((_item, i) => ref[`f${i}`] || null);
+  };
+
+  const pump = () => {
+    if (pumping || signal.aborted || !queue.length) return;
+    pumping = true;
+    (async () => {
+      try {
+        while (queue.length && !signal.aborted) {
+          const batch = queue.splice(0, GRAPHQL_BATCH_SIZE);
+          let results;
+          try {
+            results = await batchCompare(batch);
+          } catch (error) {
+            if (error.name === 'AbortError') return;
+            console.error('GraphQL batch compare failed; falling back to REST', error);
+            results = batch.map(() => null);
+          }
+          const failed = [];
+          results.forEach((result, i) => {
+            if (result) {
+              const { fork, rowIdx } = batch[i];
+              fork.compareOwner = fork.owner.login;
+              fork.compareBranch = fork.default_branch;
+              applyResult(rowIdx, result.aheadBy, result.behindBy);
+            } else {
+              failed.push(batch[i]);
+            }
+          });
+          table.draw(false);
+          await Promise.all(failed.map(restCompareItem));
+        }
+      } finally {
+        pumping = false;
+        if (queue.length && !signal.aborted) pump();
+      }
+    })();
   };
 
   const enqueueRow = rowIdx => {
@@ -358,7 +411,7 @@ async function startAheadBehind(repo, baseBranch, forks, headers, signal) {
       .rows({ page: 'current', search: 'applied', order: 'applied' })
       .indexes()
       .each(enqueueRow);
-    spawnWorkers();
+    pump();
   };
 
   // Sorting by Ahead/Behind is only meaningful once every row has data, so a
@@ -370,7 +423,7 @@ async function startAheadBehind(repo, baseBranch, forks, headers, signal) {
       .rows({ search: 'applied', order: 'applied' })
       .indexes()
       .each(enqueueRow);
-    spawnWorkers();
+    pump();
   };
 
   table.off('draw.dt.aheadBehind');
