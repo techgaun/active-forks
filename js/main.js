@@ -224,23 +224,44 @@ async function fetchAheadBehind(repo, forks, headers, signal) {
     }
   };
 
+  const compareOnce = async (login, branch) => {
+    const url =
+      `https://api.github.com/repos/${repo}/compare/` +
+      `${encodeURIComponent(baseBranch)}...` +
+      `${encodeURIComponent(login)}:${encodeURIComponent(branch)}` +
+      '?per_page=1';
+    const response = await fetch(url, { headers, signal });
+    if (!response.ok) throw Object.assign(Error(response.statusText), { status: response.status });
+    return response.json();
+  };
+
   const worker = async () => {
     while (queue.length) {
       if (signal.aborted) return;
       const { fork, rowIdx } = queue.shift();
       try {
-        const url =
-          `https://api.github.com/repos/${repo}/compare/` +
-          `${encodeURIComponent(baseBranch)}...` +
-          `${encodeURIComponent(fork.owner.login)}:${encodeURIComponent(fork.default_branch)}` +
-          '?per_page=1';
-        const response = await fetch(url, { headers, signal });
-        if (!response.ok) throw Error(response.statusText);
-        const comparison = await response.json();
+        let comparison;
+        try {
+          comparison = await compareOnce(fork.owner.login, fork.default_branch);
+        } catch (error) {
+          if (error.status !== 404) throw error;
+          // The forks listing can be stale: the fork may have been renamed or
+          // deleted since. Look it up by immutable id and retry once if renamed.
+          const response = await fetch(`https://api.github.com/repositories/${fork.id}`, { headers, signal });
+          if (!response.ok) throw error;
+          const current = await response.json();
+          if (
+            current.owner.login === fork.owner.login &&
+            current.default_branch === fork.default_branch
+          ) {
+            throw error; // same coordinates, e.g. an empty fork — retrying won't help
+          }
+          comparison = await compareOnce(current.owner.login, current.default_branch);
+        }
         applyResult(rowIdx, comparison.ahead_by, comparison.behind_by);
       } catch (error) {
         if (error.name === 'AbortError') return;
-        // 404s are expected for empty forks or renamed branches; leave cells unknown
+        // fork deleted, private, or empty — leave cells unknown
       }
     }
   };
