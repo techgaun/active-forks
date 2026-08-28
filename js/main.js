@@ -10,7 +10,16 @@ window.addEventListener('load', () => {
     else localStorage.removeItem('github-token');
   });
 
-  if(localStorage.getItem('darkmode') === '1') document.body.setAttribute('data-bs-theme', 'dark');
+  // Follow the OS color scheme until the user makes an explicit choice
+  const storedDarkMode = localStorage.getItem('darkmode');
+  const darkMode =
+    storedDarkMode === null
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : storedDarkMode === '1';
+  if (darkMode) {
+    document.body.setAttribute('data-bs-theme', 'dark');
+    document.getElementById('dark-mode-toggle').ariaPressed = 'true';
+  }
 
   const repo = getRepoFromUrl();
 
@@ -25,9 +34,22 @@ document.getElementById('form').addEventListener('submit', e => {
   fetchData();
 });
 
+// Accept "owner/repo" as well as pasted GitHub URLs, including ones with
+// extra path segments (/tree/main, /issues, ...) or a trailing .git
+function normalizeRepoInput(input) {
+  let path = input.replaceAll(' ', '');
+  const url = URL.parse(path.includes('://') ? path : `https://${path}`);
+  if (url && (url.hostname === 'github.com' || url.hostname === 'www.github.com')) {
+    path = url.pathname;
+  }
+  const segments = path.split('/').filter(Boolean);
+  if (segments.length < 2) return path.replace(/^\/+|\/+$/g, '');
+  return `${segments[0]}/${segments[1].replace(/\.git$/, '')}`;
+}
+
 function fetchData() {
-  const repo = document.getElementById('q').value.replaceAll(' ','');
-  const re = /[-_\w]+\/[-_.\w]+/;
+  const repo = normalizeRepoInput(document.getElementById('q').value);
+  const re = /^[-_\w]+\/[-_.\w]+$/;
 
   const urlRepo = getRepoFromUrl();
 
@@ -56,7 +78,7 @@ function updateDT(data) {
     if (fork.behind_by === undefined) fork.behind_by = null;
     fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`;
     const avatarUrl = (fork.owner && fork.owner.avatar_url) || 'https://avatars.githubusercontent.com/u/0?v=4';
-    fork.ownerName = `<img src="${avatarUrl}&s=48" width="24" height="24" class="me-2 rounded-circle" />${fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>'}`;
+    fork.ownerName = `<img src="${avatarUrl}&s=48" width="24" height="24" loading="lazy" decoding="async" class="me-2 rounded-circle" />${fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>'}`;
     forks.push(fork);
   }
   const dataSet = forks.map(fork =>
@@ -92,11 +114,36 @@ function howLongAgo(date) {
   return relTime.format(-Math.floor(elapsedYears), 'year');
 }
 
+// The GitHub API reports repository size in kilobytes
+function humanizeSize(kilobytes) {
+  const units = ['kilobyte', 'megabyte', 'gigabyte', 'terabyte'];
+  let value = kilobytes;
+  let unitIdx = 0;
+  while (value >= 1024 && unitIdx < units.length - 1) {
+    value /= 1024;
+    unitIdx++;
+  }
+  return new Intl.NumberFormat(navigator.language, {
+    style: 'unit',
+    unit: units[unitIdx],
+    unitDisplay: 'short',
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
 function getColumnRenderer(key) {
   if (key === 'pushed_at') {
     return (data, type, _row) => {
       if (type === 'display') {
         return howLongAgo(data);
+      }
+      return data;
+    };
+  }
+  if (key === 'size') {
+    return (data, type, _row) => {
+      if (type === 'display') {
+        return humanizeSize(data);
       }
       return data;
     };
@@ -334,14 +381,6 @@ async function startAheadBehind(repo, forks, headers, signal) {
 }
 
 function fetchAndShow(repo) {
-  repo = repo.replace('https://github.com/', '');
-  repo = repo.replace('http://github.com/', '');
-  repo = repo.replace(/\.git$/, '');
-  repo = repo.replace(/^\s+/, ''); // remove leading whitespace
-  repo = repo.replace(/\s+$/, ''); // remove trailing whitespace
-  repo = repo.replace(/^\/+/, ''); // remove leading slashes
-  repo = repo.replace(/\/+$/, ''); // remove trailing slashes
-
   // Cancel any search still in flight so responses can't interleave
   if (window.activeFetchController) window.activeFetchController.abort();
   const controller = new AbortController();
@@ -416,7 +455,8 @@ function getRepoFromUrl() {
 }
 
 function toggleDarkMode(event) {
-  const button = event.target;
+  // currentTarget: event.target can be one of the button's inner spans
+  const button = event.currentTarget;
   if(button.ariaPressed === 'true') button.ariaPressed = 'false';
   else button.ariaPressed = 'true';
   document.body.setAttribute('data-bs-theme', button.ariaPressed === 'true' ? 'dark' : 'light');
