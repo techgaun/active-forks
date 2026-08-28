@@ -276,33 +276,60 @@ async function startAheadBehind(repo, forks, headers, signal) {
     }
   };
 
+  const enqueueRow = rowIdx => {
+    if (queued.has(rowIdx)) return;
+    if (queued.size >= COMPARE_MAX) {
+      if (!capWarned) {
+        capWarned = true;
+        console.warn(`Ahead/behind lookups capped at ${COMPARE_MAX} forks for this search`);
+      }
+      return;
+    }
+    // Row indexes match the order forks were added in updateDT
+    const fork = forks[rowIdx];
+    if (!fork || !fork.owner) return;
+    queued.add(rowIdx);
+    queue.push({ fork, rowIdx });
+  };
+
   // Queue lookups for the rows on the currently displayed page only
   const enqueueVisiblePage = () => {
     if (signal.aborted) return;
     table
       .rows({ page: 'current', search: 'applied', order: 'applied' })
       .indexes()
-      .each(rowIdx => {
-        if (queued.has(rowIdx)) return;
-        if (queued.size >= COMPARE_MAX) {
-          if (!capWarned) {
-            capWarned = true;
-            console.warn(`Ahead/behind lookups capped at ${COMPARE_MAX} forks for this search`);
-          }
-          return;
-        }
-        // Row indexes match the order forks were added in updateDT
-        const fork = forks[rowIdx];
-        if (!fork || !fork.owner) return;
-        queued.add(rowIdx);
-        queue.push({ fork, rowIdx });
-      });
+      .each(enqueueRow);
+    spawnWorkers();
+  };
+
+  // Sorting by Ahead/Behind is only meaningful once every row has data, so a
+  // header click on those columns queues lookups for all (filtered) rows,
+  // topmost first
+  const enqueueAllRows = () => {
+    if (signal.aborted) return;
+    table
+      .rows({ search: 'applied', order: 'applied' })
+      .indexes()
+      .each(enqueueRow);
     spawnWorkers();
   };
 
   table.off('draw.dt.aheadBehind');
+  table.off('order.dt.aheadBehind');
   table.on('draw.dt.aheadBehind', enqueueVisiblePage);
-  signal.addEventListener('abort', () => table.off('draw.dt.aheadBehind'));
+  table.on('order.dt.aheadBehind', () => {
+    const sortsCompareColumn = table
+      .order()
+      .some(o => {
+        const colIdx = Array.isArray(o) ? o[0] : o.idx;
+        return colIdx === aheadColIdx || colIdx === behindColIdx;
+      });
+    if (sortsCompareColumn) enqueueAllRows();
+  });
+  signal.addEventListener('abort', () => {
+    table.off('draw.dt.aheadBehind');
+    table.off('order.dt.aheadBehind');
+  });
   enqueueVisiblePage();
 }
 
