@@ -1,6 +1,15 @@
 window.addEventListener('load', () => {
   initDT(); // Initialize the DatatTable and window.columnNames variables
   document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
+
+  const tokenInput = document.getElementById('token');
+  tokenInput.value = getToken();
+  tokenInput.addEventListener('change', () => {
+    const token = tokenInput.value.trim();
+    if (token) localStorage.setItem('github-token', token);
+    else localStorage.removeItem('github-token');
+  });
+
   if(localStorage.getItem('darkmode') === '1') document.body.setAttribute('data-bs-theme', 'dark');
 
   const repo = getRepoFromUrl();
@@ -44,7 +53,8 @@ function updateDT(data) {
   const forks = [];
   for (let fork of data) {
     fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`;
-    fork.ownerName = `<img src="${fork.owner.avatar_url || 'https://avatars.githubusercontent.com/u/0?v=4'}&s=48" width="24" height="24" class="me-2 rounded-circle" />${fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>'}`;
+    const avatarUrl = (fork.owner && fork.owner.avatar_url) || 'https://avatars.githubusercontent.com/u/0?v=4';
+    fork.ownerName = `<img src="${avatarUrl}&s=48" width="24" height="24" class="me-2 rounded-circle" />${fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>'}`;
     forks.push(fork);
   }
   const dataSet = forks.map(fork =>
@@ -129,6 +139,40 @@ function initDT() {
   makeTableKeyboardScrollable();
 }
 
+function getToken() {
+  const tokenInput = document.getElementById('token');
+  return (tokenInput && tokenInput.value.trim()) || localStorage.getItem('github-token') || '';
+}
+
+// Extract the rel="next" URL from a Link response header, if any
+function parseNextLink(header) {
+  if (!header) return null;
+  const match = header.match(/<([^>]+)>;\s*rel="next"/);
+  return match ? match[1] : null;
+}
+
+async function fetchForkPages(repo, headers, maxPages, signal) {
+  const forks = [];
+  let url = `https://api.github.com/repos/${repo}/forks?sort=stargazers&per_page=100`;
+  let page = 0;
+  let truncated = false;
+
+  while (url) {
+    const response = await fetch(url, { headers, signal });
+    if (!response.ok) throw Error(response.statusText);
+    forks.push(...(await response.json()));
+    page++;
+
+    url = parseNextLink(response.headers.get('link'));
+    if (url && page >= maxPages) {
+      truncated = true;
+      break;
+    }
+  }
+
+  return { forks, truncated };
+}
+
 function fetchAndShow(repo) {
   repo = repo.replace('https://github.com/', '');
   repo = repo.replace('http://github.com/', '');
@@ -138,23 +182,46 @@ function fetchAndShow(repo) {
   repo = repo.replace(/^\/+/, ''); // remove leading slashes
   repo = repo.replace(/\/+$/, ''); // remove trailing slashes
 
-  fetch(
-    `https://api.github.com/repos/${repo}/forks?sort=stargazers&per_page=100`
-  )
-    .then(response => {
-      if (!response.ok) throw Error(response.statusText);
-      return response.json();
-    })
-    .then(data => {
-      updateDT(data);
+  // Cancel any search still in flight so responses can't interleave
+  if (window.activeFetchController) window.activeFetchController.abort();
+  const controller = new AbortController();
+  window.activeFetchController = controller;
+
+  const token = getToken();
+  const headers = { Accept: 'application/vnd.github+json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  // Unauthenticated requests only get 60/hour, so keep page count modest
+  const maxPages = token ? 30 : 4;
+  const spinner = document.getElementById('spinner');
+  spinner.hidden = false;
+
+  fetchForkPages(repo, headers, maxPages, controller.signal)
+    .then(({ forks, truncated }) => {
+      updateDT(forks);
+      if (truncated) {
+        showMsg(
+          `Showing the first ${forks.length} forks. ${
+            token ? '' : 'Add a GitHub token below the search box to fetch more.'
+          }`,
+          'info'
+        );
+      }
     })
     .catch(error => {
+      if (error.name === 'AbortError') return;
       const msg =
         error.toString().indexOf('Forbidden') >= 0
-          ? 'Error: API Rate Limit Exceeded'
+          ? 'Error: API Rate Limit Exceeded. Add a GitHub token below the search box to raise the limit'
           : error;
       showMsg(`${msg}. Additional info in console`, 'danger');
       console.error(error);
+    })
+    .finally(() => {
+      if (window.activeFetchController === controller) {
+        spinner.hidden = true;
+        window.activeFetchController = null;
+      }
     });
 }
 
@@ -169,10 +236,8 @@ function showMsg(msg, type) {
 
   document.getElementById('data-body').innerHTML = `
         <div class="alert ${alert_type} alert-dismissible fade show" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
             ${msg}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
 }
