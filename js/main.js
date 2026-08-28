@@ -52,6 +52,8 @@ function updateDT(data) {
   // Format dataset and redraw DataTable. Use second index for key name
   const forks = [];
   for (let fork of data) {
+    if (fork.ahead_by === undefined) fork.ahead_by = null;
+    if (fork.behind_by === undefined) fork.behind_by = null;
     fork.repoLink = `<a href="https://github.com/${fork.full_name}">Link</a>`;
     const avatarUrl = (fork.owner && fork.owner.avatar_url) || 'https://avatars.githubusercontent.com/u/0?v=4';
     fork.ownerName = `<img src="${avatarUrl}&s=48" width="24" height="24" class="me-2 rounded-circle" />${fork.owner ? fork.owner.login : '<strike><em>Unknown</em></strike>'}`;
@@ -90,6 +92,27 @@ function howLongAgo(date) {
   return relTime.format(-Math.floor(elapsedYears), 'year');
 }
 
+function getColumnRenderer(key) {
+  if (key === 'pushed_at') {
+    return (data, type, _row) => {
+      if (type === 'display') {
+        return howLongAgo(data);
+      }
+      return data;
+    };
+  }
+  if (key === 'ahead_by' || key === 'behind_by') {
+    // null means unknown (no token, compare failed, or not fetched yet)
+    return (data, type, _row) => {
+      if (data === null) {
+        return type === 'display' ? '–' : -1;
+      }
+      return data;
+    };
+  }
+  return null;
+}
+
 function initDT() {
   // Create ordered Object with column name and mapped display name
   window.columnNamesMap = [
@@ -98,6 +121,8 @@ function initDT() {
     ['Owner', 'ownerName'], // custom key
     ['Name', 'name'],
     ['Branch', 'default_branch'],
+    ['Ahead', 'ahead_by'], // custom key, filled in by fetchAheadBehind
+    ['Behind', 'behind_by'], // custom key, filled in by fetchAheadBehind
     ['Stars', 'stargazers_count'],
     ['Forks', 'forks'],
     ['Open Issues', 'open_issues_count'],
@@ -116,15 +141,7 @@ function initDT() {
     columns: window.columnNamesMap.map(colNM => {
       return {
         title: colNM[0],
-        render:
-          colNM[1] === 'pushed_at'
-            ? (data, type, _row) => {
-                if (type === 'display') {
-                  return howLongAgo(data);
-                }
-                return data;
-              }
-            : null,
+        render: getColumnRenderer(colNM[1]),
       };
     }),
     order: [[sortColumnIdx, 'desc']],
@@ -173,6 +190,65 @@ async function fetchForkPages(repo, headers, maxPages, signal) {
   return { forks, truncated };
 }
 
+// Each ahead/behind lookup costs one API request per fork, so only run them
+// when a token (5,000 requests/hour) is configured, and cap the total
+const COMPARE_MAX = 400;
+const COMPARE_CONCURRENCY = 8;
+
+async function fetchAheadBehind(repo, forks, headers, signal) {
+  let baseBranch;
+  try {
+    const response = await fetch(`https://api.github.com/repos/${repo}`, { headers, signal });
+    if (!response.ok) throw Error(response.statusText);
+    baseBranch = (await response.json()).default_branch;
+  } catch (error) {
+    if (error.name !== 'AbortError') console.error('Could not determine upstream default branch', error);
+    return;
+  }
+
+  const aheadColIdx = window.columnNamesMap.findIndex(colNM => colNM[1] === 'ahead_by');
+  const behindColIdx = window.columnNamesMap.findIndex(colNM => colNM[1] === 'behind_by');
+  // Row indexes in the DataTable match the order forks were added in updateDT
+  const queue = forks
+    .map((fork, rowIdx) => ({ fork, rowIdx }))
+    .filter(({ fork }) => fork.owner);
+  let updatesSinceDraw = 0;
+
+  const applyResult = (rowIdx, ahead, behind) => {
+    window.forkTable.cell(rowIdx, aheadColIdx).data(ahead);
+    window.forkTable.cell(rowIdx, behindColIdx).data(behind);
+    // Redraw in batches so large fork lists don't thrash the table
+    if (++updatesSinceDraw >= 20) {
+      updatesSinceDraw = 0;
+      window.forkTable.draw(false);
+    }
+  };
+
+  const worker = async () => {
+    while (queue.length) {
+      if (signal.aborted) return;
+      const { fork, rowIdx } = queue.shift();
+      try {
+        const url =
+          `https://api.github.com/repos/${repo}/compare/` +
+          `${encodeURIComponent(baseBranch)}...` +
+          `${encodeURIComponent(fork.owner.login)}:${encodeURIComponent(fork.default_branch)}` +
+          '?per_page=1';
+        const response = await fetch(url, { headers, signal });
+        if (!response.ok) throw Error(response.statusText);
+        const comparison = await response.json();
+        applyResult(rowIdx, comparison.ahead_by, comparison.behind_by);
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        // 404s are expected for empty forks or renamed branches; leave cells unknown
+      }
+    }
+  };
+
+  await Promise.all(Array.from({ length: COMPARE_CONCURRENCY }, worker));
+  window.forkTable.draw(false);
+}
+
 function fetchAndShow(repo) {
   repo = repo.replace('https://github.com/', '');
   repo = repo.replace('http://github.com/', '');
@@ -197,15 +273,24 @@ function fetchAndShow(repo) {
   spinner.hidden = false;
 
   fetchForkPages(repo, headers, maxPages, controller.signal)
-    .then(({ forks, truncated }) => {
+    .then(async ({ forks, truncated }) => {
       updateDT(forks);
+
+      const notices = [];
       if (truncated) {
-        showMsg(
-          `Showing the first ${forks.length} forks. ${
-            token ? '' : 'Add a GitHub token below the search box to fetch more.'
-          }`,
-          'info'
+        notices.push(`Showing the first ${forks.length} forks`);
+      }
+      if (!token) {
+        notices.push(
+          'Add a GitHub token below the search box to fetch more forks and see ahead/behind commit counts'
         );
+      } else if (forks.length > COMPARE_MAX) {
+        notices.push(`Ahead/behind is computed for the first ${COMPARE_MAX} forks only`);
+      }
+      if (notices.length) showMsg(`${notices.join('. ')}.`, 'info');
+
+      if (token && forks.length) {
+        await fetchAheadBehind(repo, forks.slice(0, COMPARE_MAX), headers, controller.signal);
       }
     })
     .catch(error => {
