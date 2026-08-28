@@ -1,3 +1,6 @@
+:root {
+	--dt-order-arrow_opacity: 0.4;
+}
 th:nth-child(2) {
 	width: 15%;
 }
@@ -31,6 +34,10 @@ table.dataTable thead > tr > td.dt-ordering-asc span.dt-column-order:after,
 table.dataTable thead > tr > td.dt-ordering-desc span.dt-column-order:before,
 table.dataTable thead > tr > td.dt-ordering-desc span.dt-column-order:after {
 	opacity: 0.4;
+}
+table.dataTable th.dt-type-numeric div.dt-column-header {
+	flex-direction: row;
+	margin-inline-end: 0.25rem;
 }
 table.dataTable thead > tr > th.dt-ordering-asc span.dt-column-order:before, table.dataTable thead > tr > th.dt-ordering-desc span.dt-column-order:after,
 table.dataTable thead > tr > td.dt-ordering-asc span.dt-column-order:before,
