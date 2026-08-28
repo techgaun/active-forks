@@ -37,6 +37,12 @@ rather than version.
 
 ### Changed
 
+- Ahead/behind counts are now fetched in batches of 50 through the GitHub
+  GraphQL API — one rate-limit point per batch instead of one REST request
+  per fork — making sorted full-table lookups near-instant. Forks the batch
+  cannot resolve (renamed or stale listing entries) fall back to the REST
+  compare with its rename rescue
+  ([#104](https://github.com/techgaun/active-forks/pull/104)).
 - The Size column is now rendered in human-readable units (kB/MB/GB/TB);
   sorting and filtering still use the raw value
   ([#101](https://github.com/techgaun/active-forks/pull/101)).
