@@ -7,8 +7,8 @@
 #
 # One-time store setup and the secrets this workflow needs are documented in
 # extension/PUBLISHING.md. Required repository secrets:
-#   CHROME_EXTENSION_ID, CHROME_CLIENT_ID, CHROME_CLIENT_SECRET,
-#   CHROME_REFRESH_TOKEN, AMO_JWT_ISSUER, AMO_JWT_SECRET
+#   CHROME_EXTENSION_ID, CHROME_PUBLISHER_ID, CHROME_CLIENT_ID,
+#   CHROME_CLIENT_SECRET, CHROME_REFRESH_TOKEN, AMO_JWT_ISSUER, AMO_JWT_SECRET
 
 name: Publish extension
 
@@ -34,7 +34,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
 
@@ -58,10 +58,10 @@ jobs:
         if: steps.version.outputs.changed != 'true'
         run: echo "extension/manifest.json version unchanged — nothing to publish. Bump it to release."
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: steps.version.outputs.changed == 'true'
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Package extension
         if: steps.version.outputs.changed == 'true'
@@ -74,10 +74,12 @@ jobs:
         if: steps.version.outputs.changed == 'true'
         env:
           EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
           CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
-        run: npx --yes chrome-webstore-upload-cli@3 upload --source active-forks-extension.zip --auto-publish
+        # bare command (no subcommand) uploads and then publishes
+        run: npx --yes chrome-webstore-upload-cli@4 --source active-forks-extension.zip
 
       - name: Publish to Firefox Add-ons
         if: steps.version.outputs.changed == 'true'
@@ -86,11 +88,11 @@ jobs:
           WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         # --approval-timeout 0: exit once the upload is validated instead of
         # polling for AMO's human review to finish
-        run: npx --yes web-ext@8 sign --source-dir extension --channel listed --approval-timeout 0
+        run: npx --yes web-ext@10 sign --source-dir extension --channel listed --approval-timeout 0
 
       - name: Upload packaged zip as artifact
         if: steps.version.outputs.changed == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: active-forks-extension-${{ steps.version.outputs.version }}
           path: active-forks-extension.zip

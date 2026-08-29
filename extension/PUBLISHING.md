@@ -26,7 +26,9 @@ Actions).
 2. Zip the `extension/` directory contents (`cd extension && zip -r ../ext.zip .`)
    and upload it as a new item in the developer console; complete the listing
    (description, screenshots, privacy declarations) and submit for review.
-3. Note the extension ID from the console URL → secret `CHROME_EXTENSION_ID`.
+3. Note the extension ID from the console URL → secret `CHROME_EXTENSION_ID`,
+   and your publisher ID from the developer console account settings →
+   secret `CHROME_PUBLISHER_ID`.
 4. Create OAuth credentials for the Chrome Web Store API — follow the
    [chrome-webstore-upload guide](https://github.com/fregante/chrome-webstore-upload/blob/main/How%20to%20generate%20Google%20API%20keys.md):
    enable the "Chrome Web Store API" on a Google Cloud project, create an
