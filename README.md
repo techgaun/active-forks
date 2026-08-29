@@ -12,6 +12,28 @@ This project allows you to find the most active forks of a repository.
 
 [Find Active Fork](https://techgaun.github.io/active-forks/index.html)
 
+## As Browser Extension
+
+The [`extension/`](extension/) directory contains a cross-browser (Chrome,
+Edge, Firefox — Manifest V3) extension:
+
+- **Toolbar button**: on any GitHub repository page, click the Active Forks
+  icon for a popup previewing the repository's top 10 forks, sortable by
+  stars or creation date, with a link to the full view.
+- **Context menu**: right-click on a GitHub repository page — or on any link
+  to a GitHub repository — and choose "Find active forks" to open the full
+  view directly.
+
+It needs only the `activeTab` and `contextMenus` permissions and talks solely
+to `api.github.com`.
+
+To install from source:
+
+- **Chrome/Edge**: open `chrome://extensions`, enable "Developer mode", click
+  "Load unpacked", and select the `extension/` directory.
+- **Firefox**: open `about:debugging#/runtime/this-firefox`, click "Load
+  Temporary Add-on…", and select `extension/manifest.json`.
+
 ## As Bookmarklet
 
 If you would like to use this tool as a bookmarklet,

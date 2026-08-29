@@ -9,6 +9,12 @@ rather than version.
 
 ### Added
 
+- A cross-browser (Chrome/Edge/Firefox, Manifest V3) extension in
+  `extension/` ([#106](https://github.com/techgaun/active-forks/pull/106)):
+  a toolbar popup previewing the current repository's top 10 forks (sortable
+  by stars or creation date) with a link to the full view, and a context-menu
+  entry on GitHub pages and GitHub repository links.
+
 - Non-zero Ahead/Behind counts link to GitHub's compare view, showing the
   fork's unique commits (Ahead) or the upstream commits the fork lacks
   (Behind) ([#103](https://github.com/techgaun/active-forks/pull/103)).

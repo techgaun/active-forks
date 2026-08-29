@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Active Forks</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon32.png" width="20" height="20" alt="">
+    <h1 id="title">Active Forks</h1>
+  </header>
+
+  <div id="sort-toggle" role="group" aria-label="Sort forks by" hidden>
+    <button id="sort-stars" type="button" aria-pressed="true">Stars</button>
+    <button id="sort-newest" type="button" aria-pressed="false">Newest</button>
+  </div>
+
+  <main id="content">
+    <p id="status">Loading…</p>
+    <ol id="fork-list" hidden></ol>
+  </main>
+
+  <footer>
+    <a id="full-view" href="https://techgaun.github.io/active-forks/index.html" target="_blank" rel="noopener">
+      Open full view ↗
+    </a>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
