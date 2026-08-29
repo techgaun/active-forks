@@ -9,6 +9,12 @@ rather than version.
 
 ### Added
 
+- CI workflow that publishes the browser extension to the Chrome Web Store
+  and Firefox Add-ons on merge to `main` when `extension/` changed and the
+  manifest version was bumped; store setup and required secrets are
+  documented in `extension/PUBLISHING.md`
+  ([#107](https://github.com/techgaun/active-forks/pull/107)).
+
 - A cross-browser (Chrome/Edge/Firefox, Manifest V3) extension in
   `extension/` ([#106](https://github.com/techgaun/active-forks/pull/106)):
   a toolbar popup previewing the current repository's top 10 forks (sortable
