@@ -67,7 +67,7 @@ jobs:
         if: steps.version.outputs.changed == 'true'
         run: |
           cd extension
-          zip -r -X ../active-forks-extension.zip .
+          zip -r -X ../active-forks-extension.zip . -x PUBLISHING.md
           unzip -l ../active-forks-extension.zip
 
       - name: Publish to Chrome Web Store
