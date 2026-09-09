@@ -34,6 +34,7 @@ const sortToggle = document.getElementById('sort-toggle');
 const starsFormat = new Intl.NumberFormat(navigator.language, { notation: 'compact' });
 const cache = {}; // sort key -> forks, per popup lifetime
 let currentRepo = null;
+let loadId = 0;
 
 function showStatus(message) {
   list.hidden = true;
@@ -74,6 +75,7 @@ function renderForks(forks) {
 }
 
 async function loadForks(sort) {
+  const id = ++loadId;
   document.getElementById('sort-stars').setAttribute('aria-pressed', String(sort === 'stargazers'));
   document.getElementById('sort-newest').setAttribute('aria-pressed', String(sort === 'newest'));
 
@@ -88,6 +90,7 @@ async function loadForks(sort) {
       `https://api.github.com/repos/${currentRepo}/forks?sort=${sort}&per_page=10`,
       { headers: { Accept: 'application/vnd.github+json' } }
     );
+    if (id !== loadId) return;
     if (!response.ok) {
       showStatus(
         response.status === 403
@@ -97,6 +100,7 @@ async function loadForks(sort) {
       return;
     }
     const forks = await response.json();
+    if (id !== loadId) return;
     if (!forks.length) {
       showStatus('This repository has no forks.');
       return;
@@ -104,6 +108,7 @@ async function loadForks(sort) {
     cache[sort] = forks;
     renderForks(forks);
   } catch (error) {
+    if (id !== loadId) return;
     showStatus('Could not load forks — network error.');
   }
 }
