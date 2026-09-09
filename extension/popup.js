@@ -43,6 +43,7 @@ function showStatus(message) {
 
 function renderForks(forks) {
   list.textContent = '';
+  let rendered = 0;
   for (const fork of forks) {
     if (!fork.owner) continue;
     const item = document.createElement('li');
@@ -68,6 +69,11 @@ function renderForks(forks) {
     link.append(avatar, name, meta);
     item.append(link);
     list.append(item);
+    rendered++;
+  }
+  if (!rendered) {
+    showStatus('No forks with an available owner.');
+    return;
   }
   status.hidden = true;
   list.hidden = false;
