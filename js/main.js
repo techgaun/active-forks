@@ -51,20 +51,21 @@ function fetchData() {
   const repo = normalizeRepoInput(document.getElementById('q').value);
   const re = /^[-_\w]+\/[-_.\w]+$/;
 
+  if (!re.test(repo)) {
+    showMsg(
+      'Invalid GitHub repository! Format is &lt;username&gt;/&lt;repo&gt;',
+      'danger'
+    );
+    return;
+  }
+
   const urlRepo = getRepoFromUrl();
 
   if (!urlRepo || urlRepo !== repo) {
     window.history.pushState('', '', `#${repo}`);
   }
 
-  if (re.test(repo)) {
-    fetchAndShow(repo);
-  } else {
-    showMsg(
-      'Invalid GitHub repository! Format is &lt;username&gt;/&lt;repo&gt;',
-      'danger'
-    );
-  }
+  fetchAndShow(repo);
 }
 
 function updateDT(data) {
