@@ -12,13 +12,23 @@ window.addEventListener('load', () => {
 
   // Follow the OS color scheme until the user makes an explicit choice
   const storedDarkMode = localStorage.getItem('darkmode');
+  const colorScheme = window.matchMedia('(prefers-color-scheme: dark)');
   const darkMode =
     storedDarkMode === null
-      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? colorScheme.matches
       : storedDarkMode === '1';
   if (darkMode) {
     document.body.setAttribute('data-bs-theme', 'dark');
     document.getElementById('dark-mode-toggle').ariaPressed = 'true';
+  }
+  if (storedDarkMode === null) {
+    colorScheme.addEventListener('change', event => {
+      const button = document.getElementById('dark-mode-toggle');
+      if (localStorage.getItem('darkmode') !== null) return;
+      button.ariaPressed = String(event.matches);
+      if (event.matches) document.body.setAttribute('data-bs-theme', 'dark');
+      else document.body.removeAttribute('data-bs-theme');
+    });
   }
 
   const repo = getRepoFromUrl();
