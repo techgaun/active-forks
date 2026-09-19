@@ -15,8 +15,17 @@ const RESERVED_OWNERS = [
 
 function repoFromUrl(url) {
   const match = /^https?:\/\/(?:www\.)?github\.com\/([^/?#]+)\/([^/?#]+)/.exec(url || '');
-  if (!match || RESERVED_OWNERS.includes(match[1])) return null;
-  return `${decodeURIComponent(match[1])}/${decodeURIComponent(match[2]).replace(/\.git$/, '')}`;
+  if (!match) return null;
+  let owner;
+  let repo;
+  try {
+    owner = decodeURIComponent(match[1]);
+    repo = decodeURIComponent(match[2]);
+  } catch {
+    return null;
+  }
+  if (RESERVED_OWNERS.includes(owner.toLowerCase())) return null;
+  return `${owner}/${repo.replace(/\.git$/, '')}`;
 }
 
 chrome.runtime.onInstalled.addListener(() => {
