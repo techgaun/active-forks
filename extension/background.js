@@ -34,14 +34,14 @@ chrome.runtime.onInstalled.addListener(() => {
     id: 'active-forks-page',
     title: 'Find active forks',
     contexts: ['page'],
-    documentUrlPatterns: ['https://github.com/*'],
+    documentUrlPatterns: ['https://github.com/*', 'https://www.github.com/*'],
   });
   // Anywhere: act on a right-clicked link to a GitHub repository
   chrome.contextMenus.create({
     id: 'active-forks-link',
     title: 'Find active forks of linked repository',
     contexts: ['link'],
-    targetUrlPatterns: ['https://github.com/*'],
+    targetUrlPatterns: ['https://github.com/*', 'https://www.github.com/*'],
   });
 });
 
