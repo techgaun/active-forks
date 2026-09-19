@@ -474,8 +474,12 @@ function showMsg(msg, type) {
 
 function getRepoFromUrl() {
   const urlRepo = location.hash && location.hash.slice(1);
-
-  return urlRepo && decodeURIComponent(urlRepo);
+  if (!urlRepo) return urlRepo;
+  try {
+    return decodeURIComponent(urlRepo);
+  } catch (_error) {
+    return null;
+  }
 }
 
 function toggleDarkMode(event) {
