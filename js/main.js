@@ -421,6 +421,7 @@ function fetchAndShow(repo) {
 
   Promise.all([upstreamPromise, fetchForkPages(repo, headers, maxPages, controller.signal)])
     .then(async ([upstream, { forks, truncated }]) => {
+      if (window.activeFetchController !== controller || controller.signal.aborted) return;
       // Show the upstream repository itself as the first row (it usually also
       // leads the default sort by stars)
       upstream.isUpstream = true;
@@ -443,7 +444,7 @@ function fetchAndShow(repo) {
       }
     })
     .catch(error => {
-      if (error.name === 'AbortError') return;
+      if (window.activeFetchController !== controller || controller.signal.aborted || error.name === 'AbortError') return;
       const msg =
         error.toString().indexOf('Forbidden') >= 0
           ? 'Error: API Rate Limit Exceeded. Add a GitHub token below the search box to raise the limit'
