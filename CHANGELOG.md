@@ -7,6 +7,13 @@ rather than version.
 
 ## 2026-09-19
 
+### Fixed
+
+- The extension manifest now declares
+  `browser_specific_settings.gecko.data_collection_permissions` with
+  `"required": ["none"]` (the extension collects no user data), which
+  addons.mozilla.org requires for new submissions.
+
 ### Added
 
 - README link to the extension's [Chrome Web Store
