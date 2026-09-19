@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 since the project is deployed continuously from `main`, entries are grouped by date
 rather than version.
 
+## 2026-09-19
+
+### Added
+
+- Chrome Web Store listing icon at `store-assets/icon-128.png`: a 128x128 PNG
+  derived from `favicon.ico`, with the artwork at 96x96 on a transparent
+  canvas per the store's icon guidelines.
+
 ## 2026-08-28
 
 ### Added
