@@ -31,7 +31,8 @@ The [`extension/`](extension/) directory contains its source, a cross-browser
 It needs only the `activeTab` and `contextMenus` permissions and talks solely
 to `api.github.com`.
 
-To install from source:
+Store releases are automated — see
+[`extension/PUBLISHING.md`](extension/PUBLISHING.md). To install from source:
 
 - **Chrome/Edge**: open `chrome://extensions`, enable "Developer mode", click
   "Load unpacked", and select the `extension/` directory.
