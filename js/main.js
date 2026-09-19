@@ -38,9 +38,13 @@ document.getElementById('form').addEventListener('submit', e => {
 // extra path segments (/tree/main, /issues, ...) or a trailing .git
 function normalizeRepoInput(input) {
   let path = input.replaceAll(' ', '');
-  const url = URL.parse(path.includes('://') ? path : `https://${path}`);
-  if (url && (url.hostname === 'github.com' || url.hostname === 'www.github.com')) {
-    path = url.pathname;
+  try {
+    const url = new URL(path.includes('://') ? path : `https://${path}`);
+    if (url.hostname === 'github.com' || url.hostname === 'www.github.com') {
+      path = url.pathname;
+    }
+  } catch {
+    // Leave malformed input for the repository validation below.
   }
   const segments = path.split('/').filter(Boolean);
   if (segments.length < 2) return path.replace(/^\/+|\/+$/g, '');
