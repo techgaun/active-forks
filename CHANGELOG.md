@@ -9,6 +9,10 @@ rather than version.
 
 ### Added
 
+- README link to the extension's [Chrome Web Store
+  listing](https://chromewebstore.google.com/detail/active-forks/mlaodiomiogjacfhimodffiolbclhooj),
+  now that the extension is published there.
+
 - Chrome Web Store listing icon at `store-assets/icon-128.png`: a 128x128 PNG
   derived from `favicon.ico`, with the artwork at 96x96 on a transparent
   canvas per the store's icon guidelines.
