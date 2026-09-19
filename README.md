@@ -14,8 +14,12 @@ This project allows you to find the most active forks of a repository.
 
 ## As Browser Extension
 
-The [`extension/`](extension/) directory contains a cross-browser (Chrome,
-Edge, Firefox — Manifest V3) extension:
+The extension is available on the
+[Chrome Web Store](https://chromewebstore.google.com/detail/active-forks/mlaodiomiogjacfhimodffiolbclhooj) —
+install it from there for Chrome and other Chromium-based browsers.
+
+The [`extension/`](extension/) directory contains its source, a cross-browser
+(Chrome, Edge, Firefox — Manifest V3) extension:
 
 - **Toolbar button**: on any GitHub repository page, click the Active Forks
   icon for a popup previewing the repository's top 10 forks, sortable by
