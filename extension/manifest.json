@@ -28,7 +28,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "active-forks@techgaun.github.io",
-      "strict_min_version": "115.0"
+      "strict_min_version": "121.0"
     }
   }
 }
