@@ -12,13 +12,23 @@ window.addEventListener('load', () => {
 
   // Follow the OS color scheme until the user makes an explicit choice
   const storedDarkMode = localStorage.getItem('darkmode');
+  const colorScheme = window.matchMedia('(prefers-color-scheme: dark)');
   const darkMode =
     storedDarkMode === null
-      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? colorScheme.matches
       : storedDarkMode === '1';
   if (darkMode) {
     document.body.setAttribute('data-bs-theme', 'dark');
     document.getElementById('dark-mode-toggle').ariaPressed = 'true';
+  }
+  if (storedDarkMode === null) {
+    colorScheme.addEventListener('change', event => {
+      const button = document.getElementById('dark-mode-toggle');
+      if (localStorage.getItem('darkmode') !== null) return;
+      button.ariaPressed = String(event.matches);
+      if (event.matches) document.body.setAttribute('data-bs-theme', 'dark');
+      else document.body.removeAttribute('data-bs-theme');
+    });
   }
 
   const repo = getRepoFromUrl();
@@ -38,9 +48,13 @@ document.getElementById('form').addEventListener('submit', e => {
 // extra path segments (/tree/main, /issues, ...) or a trailing .git
 function normalizeRepoInput(input) {
   let path = input.replaceAll(' ', '');
-  const url = URL.parse(path.includes('://') ? path : `https://${path}`);
-  if (url && (url.hostname === 'github.com' || url.hostname === 'www.github.com')) {
-    path = url.pathname;
+  try {
+    const url = new URL(path.includes('://') ? path : `https://${path}`);
+    if (url.hostname === 'github.com' || url.hostname === 'www.github.com') {
+      path = url.pathname;
+    }
+  } catch {
+    // Leave malformed input for the repository validation below.
   }
   const segments = path.split('/').filter(Boolean);
   if (segments.length < 2) return path.replace(/^\/+|\/+$/g, '');
@@ -51,20 +65,21 @@ function fetchData() {
   const repo = normalizeRepoInput(document.getElementById('q').value);
   const re = /^[-_\w]+\/[-_.\w]+$/;
 
+  if (!re.test(repo)) {
+    showMsg(
+      'Invalid GitHub repository! Format is &lt;username&gt;/&lt;repo&gt;',
+      'danger'
+    );
+    return;
+  }
+
   const urlRepo = getRepoFromUrl();
 
   if (!urlRepo || urlRepo !== repo) {
     window.history.pushState('', '', `#${repo}`);
   }
 
-  if (re.test(repo)) {
-    fetchAndShow(repo);
-  } else {
-    showMsg(
-      'Invalid GitHub repository! Format is &lt;username&gt;/&lt;repo&gt;',
-      'danger'
-    );
-  }
+  fetchAndShow(repo);
 }
 
 function updateDT(data) {
@@ -537,6 +552,7 @@ function fetchAndShow(repo) {
     fetchForkPages(repo, headers, maxPages, controller.signal),
   ])
     .then(async ([upstream, upstreamRelease, { forks, truncated }]) => {
+      if (window.activeFetchController !== controller || controller.signal.aborted) return;
       // Show the upstream repository itself as the first row (it usually also
       // leads the default sort by stars)
       upstream.isUpstream = true;
@@ -566,7 +582,7 @@ function fetchAndShow(repo) {
       }
     })
     .catch(error => {
-      if (error.name === 'AbortError') return;
+      if (window.activeFetchController !== controller || controller.signal.aborted || error.name === 'AbortError') return;
       const msg =
         error.toString().indexOf('Forbidden') >= 0
           ? 'Error: API Rate Limit Exceeded. Add a GitHub token below the search box to raise the limit'
@@ -601,8 +617,12 @@ function showMsg(msg, type) {
 
 function getRepoFromUrl() {
   const urlRepo = location.hash && location.hash.slice(1);
-
-  return urlRepo && decodeURIComponent(urlRepo);
+  if (!urlRepo) return urlRepo;
+  try {
+    return decodeURIComponent(urlRepo);
+  } catch (_error) {
+    return null;
+  }
 }
 
 function toggleDarkMode(event) {

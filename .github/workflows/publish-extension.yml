@@ -1,0 +1,98 @@
+# Publishes the browser extension to the Chrome Web Store and Firefox Add-ons
+# (AMO) when a merge to main changes extension/ AND bumps the manifest version.
+#
+# Both stores reject re-uploads of an already-published version, so the
+# version guard skips publishing (successfully) when the version is unchanged.
+# To release: bump "version" in extension/manifest.json as part of the PR.
+#
+# One-time store setup and the secrets this workflow needs are documented in
+# extension/PUBLISHING.md. Required repository secrets:
+#   CHROME_EXTENSION_ID, CHROME_PUBLISHER_ID, CHROME_CLIENT_ID,
+#   CHROME_CLIENT_SECRET, CHROME_REFRESH_TOKEN, AMO_JWT_ISSUER, AMO_JWT_SECRET
+
+name: Publish extension
+
+on:
+  push:
+    branches: [main]
+    paths: ['extension/**']
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Publish even if the manifest version did not change
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-extension
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+
+      - name: Check whether the manifest version changed
+        id: version
+        run: |
+          CURR=$(jq -r .version extension/manifest.json)
+          PREV=$(git show 'HEAD^:extension/manifest.json' 2>/dev/null | jq -r .version || echo none)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then
+            CHANGED=true
+          elif [ "$CURR" != "$PREV" ]; then
+            CHANGED=true
+          else
+            CHANGED=false
+          fi
+          echo "Version: $PREV -> $CURR (publish: $CHANGED)"
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "version=$CURR" >> "$GITHUB_OUTPUT"
+
+      - name: Skip notice
+        if: steps.version.outputs.changed != 'true'
+        run: echo "extension/manifest.json version unchanged — nothing to publish. Bump it to release."
+
+      - uses: actions/setup-node@v7
+        if: steps.version.outputs.changed == 'true'
+        with:
+          node-version: 24
+
+      - name: Package extension
+        if: steps.version.outputs.changed == 'true'
+        run: |
+          cd extension
+          zip -r -X ../active-forks-extension.zip . -x PUBLISHING.md
+          unzip -l ../active-forks-extension.zip
+
+      - name: Publish to Chrome Web Store
+        if: steps.version.outputs.changed == 'true'
+        env:
+          EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        # bare command (no subcommand) uploads and then publishes
+        run: npx --yes chrome-webstore-upload-cli@4 --source active-forks-extension.zip
+
+      - name: Publish to Firefox Add-ons
+        if: steps.version.outputs.changed == 'true'
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        # --approval-timeout 0: exit once the upload is validated instead of
+        # polling for AMO's human review to finish
+        run: npx --yes web-ext@10 sign --source-dir extension --channel listed --approval-timeout 0
+
+      - name: Upload packaged zip as artifact
+        if: steps.version.outputs.changed == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: active-forks-extension-${{ steps.version.outputs.version }}
+          path: active-forks-extension.zip

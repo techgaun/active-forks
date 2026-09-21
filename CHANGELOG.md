@@ -5,9 +5,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 since the project is deployed continuously from `main`, entries are grouped by date
 rather than version.
 
+## 2026-09-19
+
+### Fixed
+
+- The extension manifest now declares
+  `browser_specific_settings.gecko.data_collection_permissions` with
+  `"required": ["none"]` (the extension collects no user data), which
+  addons.mozilla.org requires for new submissions.
+
+### Added
+
+- README link to the extension's [Chrome Web Store
+  listing](https://chromewebstore.google.com/detail/active-forks/mlaodiomiogjacfhimodffiolbclhooj),
+  now that the extension is published there.
+
+- Chrome Web Store listing icon at `store-assets/icon-128.png`: a 128x128 PNG
+  derived from `favicon.ico`, with the artwork at 96x96 on a transparent
+  canvas per the store's icon guidelines.
+
 ## 2026-08-28
 
 ### Added
+
+- CI workflow that publishes the browser extension to the Chrome Web Store
+  and Firefox Add-ons on merge to `main` when `extension/` changed and the
+  manifest version was bumped; store setup and required secrets are
+  documented in `extension/PUBLISHING.md`
+  ([#107](https://github.com/techgaun/active-forks/pull/107)).
+
+- A cross-browser (Chrome/Edge/Firefox, Manifest V3) extension in
+  `extension/` ([#106](https://github.com/techgaun/active-forks/pull/106)):
+  a toolbar popup previewing the current repository's top 10 forks (sortable
+  by stars or creation date) with a link to the full view, and a context-menu
+  entry on GitHub pages and GitHub repository links.
 
 - Three new columns ([#105](https://github.com/techgaun/active-forks/pull/105)):
   Created (fork creation date), Issues Enabled, and Release — the latest
