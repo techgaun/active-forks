@@ -5,6 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 since the project is deployed continuously from `main`, entries are grouped by date
 rather than version.
 
+## 2026-09-22
+
+### Changed
+
+- Extension version bumped to 1.1.0 to release the fixes accumulated since
+  the 1.0.0 store submissions: consistent reserved-route classification
+  ([#111](https://github.com/techgaun/active-forks/pull/111)), stale popup
+  responses no longer replacing newer results
+  ([#110](https://github.com/techgaun/active-forks/pull/110)), an explanatory
+  popup status for unavailable fork owners
+  ([#114](https://github.com/techgaun/active-forks/pull/114)), context-menu
+  matching of `www.github.com` links
+  ([#115](https://github.com/techgaun/active-forks/pull/115)), a Firefox
+  minimum version with MV3 background support
+  ([#116](https://github.com/techgaun/active-forks/pull/116)), and the AMO
+  data-collection declaration
+  ([#120](https://github.com/techgaun/active-forks/pull/120)).
+
 ## 2026-09-19
 
 ### Fixed
